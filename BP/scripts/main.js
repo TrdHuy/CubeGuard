@@ -1,26 +1,43 @@
-import * as server from "@minecraft/server"
-import * as ui from "@minecraft/server-ui"
+import * as server from "@minecraft/server";
+import {
+  createBlockBreakBroadcastMessage,
+  createBlockBreakDebugMessage,
+} from "./blockBreakHandler.js";
 
-// In ra console khi script bắt đầu
 console.warn("[CubeGuard] Script loaded and listening for block break events!");
 
-const w = server.world
-// Đăng ký listener cho sự kiện phá block
-w.afterEvents.playerBreakBlock.subscribe((event) => {
-    try {
-        const player = event.player;     // Người chơi phá block
-        const block = event.block;       // Block bị phá
-        const dim = block.dimension.id;  // Dimension (overworld / nether / end)
+const world = server.world;
 
-        // Gửi thông báo trong chat
-        w.sendMessage(
-            `🧱 ${player.name} just broke a3 ${block.typeId} at (${block.location.x}, ${block.location.y}, ${block.location.z}) in ${dim}`
-        );
+world.afterEvents.playerBreakBlock.subscribe((event) => {
+  try {
+    const playerName = event?.player?.name ?? "";
+    const blockType = event?.block?.typeId ?? "";
+    const location = event?.block?.location;
+    const dimensionId = event?.block?.dimension?.id ?? "";
 
-        // Ghi log ra console debug
-        console.warn(`[DEBUG] Block broken: ${block.typeId} by ${player.name} @ ${block.location.x},${block.location.y},${block.location.z}`);
+    const locationX = location?.x;
+    const locationY = location?.y;
+    const locationZ = location?.z;
 
-    } catch (err) {
-        console.error("[CubeGuard] Error handling blockBreak event:", err);
-    }
+    const broadcastMessage = createBlockBreakBroadcastMessage(
+      playerName,
+      blockType,
+      locationX,
+      locationY,
+      locationZ,
+      dimensionId
+    );
+    const debugMessage = createBlockBreakDebugMessage(
+      playerName,
+      blockType,
+      locationX,
+      locationY,
+      locationZ
+    );
+
+    world.sendMessage(broadcastMessage);
+    console.warn(debugMessage);
+  } catch (error) {
+    console.error("[CubeGuard] Error handling blockBreak event:", error);
+  }
 });
