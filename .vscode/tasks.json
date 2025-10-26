@@ -1,0 +1,9 @@
+{
+  "label": "Deploy All",
+  "type": "shell",
+  "command": "powershell",
+  "args": [
+    "-ExecutionPolicy", "Bypass",
+    "-File", "./scripts/deploy.ps1"
+  ]
+}
