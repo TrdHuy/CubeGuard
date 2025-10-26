@@ -19,3 +19,8 @@ Behavior Pack chứa toàn bộ logic và hành vi của game trong project Cube
 - Mọi thay đổi trong scripts cần reload world hoặc dùng hot-reload nếu có
 - UUID trong manifest.json không được trùng với bất kỳ pack nào khác
 - Functions có thể được gọi từ scripts hoặc command blocks bằng /function
+
+## Testing
+- Cài đặt dependencies: `npm install`
+- Chạy toàn bộ unit test cho Behavior Pack: `npm test`
+- Các bài test được viết bằng Node.js test runner và nằm trong thư mục `tests/`

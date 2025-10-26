@@ -1,9 +1,28 @@
 {
-  "label": "Deploy All",
-  "type": "shell",
-  "command": "powershell",
-  "args": [
-    "-ExecutionPolicy", "Bypass",
-    "-File", "./scripts/deploy.ps1"
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Deploy All",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "./scripts/deploy.ps1"
+      ]
+    },
+    {
+      "label": "Test BP",
+      "type": "npm",
+      "script": "test",
+      "path": "BP",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "detail": "Run the Behavior Pack unit tests"
+    }
   ]
 }

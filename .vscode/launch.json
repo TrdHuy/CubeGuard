@@ -10,6 +10,18 @@
       "localRoot": "${workspaceFolder}/BP/scripts",
       "port": 19144,
       "preLaunchTask": "Deploy All"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run BP Tests",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "test",
+        "--"
+      ],
+      "cwd": "${workspaceFolder}/BP",
+      "console": "integratedTerminal"
     }
   ]
 }

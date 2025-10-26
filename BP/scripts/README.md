@@ -4,7 +4,8 @@
 Thư mục chứa JavaScript code để điều khiển game logic, xử lý events, tương tác với players, blocks, entities thông qua Minecraft Scripting APIs. File main.js là entry point được khai báo trong BP/manifest.json.
 
 ## Nội dung
-- **main.js**: Entry point script, hiện tại đang lắng nghe sự kiện playerBreakBlock và gửi thông báo trong chat
+- **main.js**: Entry point script, đăng ký listener cho sự kiện `playerBreakBlock`
+- **blockBreakHandler.js**: Chứa logic thuần (pure logic) để định dạng thông điệp và ghi log, được unit test độc lập với Minecraft API
 
 ## Ghi chú cho Dev
 - Import modules từ @minecraft/server (world, events, entities, blocks, dimensions)
