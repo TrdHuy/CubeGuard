@@ -1,57 +1,82 @@
-import test from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatBlockBreakMessage, handleBlockBreak } from "../scripts/blockBreakHandler.js";
+import {
+  createBlockBreakBroadcastMessage,
+  createBlockBreakDebugMessage,
+} from "../scripts/blockBreakHandler.js";
 
-const sampleEvent = {
-  player: { name: "Alex" },
-  block: {
-    typeId: "minecraft:stone",
-    location: { x: 1, y: 64, z: -5 },
-    dimension: { id: "minecraft:overworld" }
-  }
-};
+test("createBlockBreakBroadcastMessage returns formatted details", () => {
+  // Arrange
+  const playerName = "Alex";
+  const blockType = "minecraft:stone";
+  const locationX = 1;
+  const locationY = 64;
+  const locationZ = -5;
+  const dimensionId = "minecraft:overworld";
 
-test("formatBlockBreakMessage returns the expected string", () => {
-  const message = formatBlockBreakMessage(sampleEvent);
+  // Act
+  const result = createBlockBreakBroadcastMessage(
+    playerName,
+    blockType,
+    locationX,
+    locationY,
+    locationZ,
+    dimensionId
+  );
+
+  // Assert
   assert.equal(
-    message,
+    result,
     "🧱 Alex just broke a minecraft:stone at (1, 64, -5) in minecraft:overworld"
   );
 });
 
-test("handleBlockBreak sends a chat message and logs debug information", () => {
-  const messages = [];
-  const warnings = [];
-  const world = {
-    sendMessage(message) {
-      messages.push(message);
-    }
-  };
+test("createBlockBreakDebugMessage returns sanitized fallback strings", () => {
+  // Arrange
+  const playerName = "";
+  const blockType = "";
+  const locationX = undefined;
+  const locationY = undefined;
+  const locationZ = undefined;
 
-  const logger = {
-    warn(message) {
-      warnings.push(message);
-    }
-  };
-
-  const message = handleBlockBreak(sampleEvent, world, logger);
-
-  assert.equal(messages.length, 1);
-  assert.equal(messages[0], message);
-  assert.equal(
-    message,
-    "🧱 Alex just broke a minecraft:stone at (1, 64, -5) in minecraft:overworld"
+  // Act
+  const result = createBlockBreakDebugMessage(
+    playerName,
+    blockType,
+    locationX,
+    locationY,
+    locationZ
   );
-  assert.equal(warnings.length, 1);
-  assert.match(
-    warnings[0],
-    /Block broken: minecraft:stone by Alex @ 1,64,-5/
+
+  // Assert
+  assert.equal(
+    result,
+    "[DEBUG] Block broken: unknown block by Unknown Player @ (0, 0, 0)"
   );
 });
 
-test("handleBlockBreak requires a world with sendMessage", () => {
-  assert.throws(
-    () => handleBlockBreak(sampleEvent, {}),
-    /sendMessage/
+test("createBlockBreakBroadcastMessage clamps non-finite coordinates to zero", () => {
+  // Arrange
+  const playerName = "Steve";
+  const blockType = "minecraft:diamond_block";
+  const locationX = Number.POSITIVE_INFINITY;
+  const locationY = Number.NaN;
+  const locationZ = Number.NEGATIVE_INFINITY;
+  const dimensionId = "minecraft:the_end";
+
+  // Act
+  const result = createBlockBreakBroadcastMessage(
+    playerName,
+    blockType,
+    locationX,
+    locationY,
+    locationZ,
+    dimensionId
+  );
+
+  // Assert
+  assert.equal(
+    result,
+    "🧱 Steve just broke a minecraft:diamond_block at (0, 0, 0) in minecraft:the_end"
   );
 });

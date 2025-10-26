@@ -1,14 +1,43 @@
 import * as server from "@minecraft/server";
-import { handleBlockBreak } from "./blockBreakHandler.js";
+import {
+  createBlockBreakBroadcastMessage,
+  createBlockBreakDebugMessage,
+} from "./blockBreakHandler.js";
 
 console.warn("[CubeGuard] Script loaded and listening for block break events!");
 
-const w = server.world;
+const world = server.world;
 
-w.afterEvents.playerBreakBlock.subscribe((event) => {
+world.afterEvents.playerBreakBlock.subscribe((event) => {
   try {
-    handleBlockBreak(event, w);
-  } catch (err) {
-    console.error("[CubeGuard] Error handling blockBreak event:", err);
+    const playerName = event?.player?.name ?? "";
+    const blockType = event?.block?.typeId ?? "";
+    const location = event?.block?.location;
+    const dimensionId = event?.block?.dimension?.id ?? "";
+
+    const locationX = location?.x;
+    const locationY = location?.y;
+    const locationZ = location?.z;
+
+    const broadcastMessage = createBlockBreakBroadcastMessage(
+      playerName,
+      blockType,
+      locationX,
+      locationY,
+      locationZ,
+      dimensionId
+    );
+    const debugMessage = createBlockBreakDebugMessage(
+      playerName,
+      blockType,
+      locationX,
+      locationY,
+      locationZ
+    );
+
+    world.sendMessage(broadcastMessage);
+    console.warn(debugMessage);
+  } catch (error) {
+    console.error("[CubeGuard] Error handling blockBreak event:", error);
   }
 });
