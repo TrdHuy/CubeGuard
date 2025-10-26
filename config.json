@@ -1,0 +1,47 @@
+{
+	"type": "minecraftBedrock",
+	"name": "CubeGuard",
+	"namespace": "cubeguard",
+	"authors": [
+		"bridge."
+	],
+	"targetVersion": "1.21.110",
+	"description": "",
+	"experimentalGameplay": {
+		"upcomingCreatorFeatures": true,
+		"experimentalCreatorCameraFeatures": true,
+		"enableGameTestFramework": true,
+		"dataDrivenJigsawStructures": false,
+		"renderDragonFeatures": true,
+		"educationEdition": false
+	},
+	"bdsProject": true,
+	"packs": {
+		"behaviorPack": "./BP",
+		"resourcePack": "./RP",
+		"skinPack": "./SP",
+		"worldTemplate": "./WT"
+	},
+	"worlds": [
+		"./worlds/*"
+	],
+	"compiler": {
+		"plugins": [
+			"generatorScripts",
+			"typeScript",
+			"entityIdentifierAlias",
+			"customEntityComponents",
+			"customItemComponents",
+			"customBlockComponents",
+			"customCommands",
+			"moLang",
+			"formatVersionCorrection",
+			[
+				"simpleRewrite",
+				{
+					"packName": "CubeGuard"
+				}
+			]
+		]
+	}
+}

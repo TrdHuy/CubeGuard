@@ -1,0 +1,42 @@
+{
+	"format_version": 2,
+	"metadata": {
+		"authors": [
+			"bridge."
+		],
+		"generated_with": {
+			"bridge": [
+				"2.7.51"
+			],
+			"dash": [
+				"0.11.7"
+			]
+		}
+	},
+	"header": {
+		"name": "CubeGuard",
+		"description": "",
+		"min_engine_version": [
+			1,
+			21,
+			90
+		],
+		"uuid": "c520b8d6-576e-4fce-91b4-a27decb68b52",
+		"version": [
+			1,
+			0,
+			0
+		]
+	},
+	"modules": [
+		{
+			"type": "skin_pack",
+			"uuid": "947c4d7b-93eb-4f86-91f2-7acb5f27b1ba",
+			"version": [
+				1,
+				0,
+				0
+			]
+		}
+	]
+}

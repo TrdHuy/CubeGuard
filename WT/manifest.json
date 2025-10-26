@@ -1,0 +1,48 @@
+{
+	"format_version": 2,
+	"metadata": {
+		"authors": [
+			"bridge."
+		],
+		"generated_with": {
+			"bridge": [
+				"2.7.51"
+			],
+			"dash": [
+				"0.11.7"
+			]
+		}
+	},
+	"header": {
+		"name": "CubeGuard",
+		"description": "",
+		"min_engine_version": [
+			1,
+			21,
+			90
+		],
+		"uuid": "ec7dd83f-4d22-47af-a0b0-6725371f6399",
+		"version": [
+			1,
+			0,
+			0
+		],
+		"lock_template_options": true,
+		"base_game_version": [
+			1,
+			21,
+			110
+		]
+	},
+	"modules": [
+		{
+			"type": "world_template",
+			"uuid": "98c4e1f0-a951-4566-88f9-62f0663b386d",
+			"version": [
+				1,
+				0,
+				0
+			]
+		}
+	]
+}
