@@ -179,7 +179,7 @@ jobs:
           set -euo pipefail
           SERVICE="${{ steps.vars.outputs.SERVICE }}"
           echo "• Restart service: ${SERVICE}"
-          sudo systemctl restart "${SERVICE}"
+          systemctl restart "${SERVICE}"
           echo "• Service status (short):"
           systemctl --no-pager --lines=20 status "${SERVICE}" || true
 
