@@ -1,0 +1,196 @@
+name: Deploy Stagging (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch cần checkout để deploy"
+        required: true
+        default: "main"
+      server_root:
+        description: "Đường dẫn root server (chứa bedrock_server, worlds, behavior_packs, resource_packs, ...)"
+        required: true
+        default: "/home/huy/Desktop/workspace/server/minecraft-staging2"
+      service_name:
+        description: "Tên systemd service của Bedrock"
+        required: true
+        default: "bedrock"
+      bp_src:
+        description: "Thư mục Behavior Pack trong repo (nguồn)"
+        required: true
+        default: "BP"
+      rp_src:
+        description: "Thư mục Resource Pack trong repo (nguồn)"
+        required: true
+        default: "RP"
+      bp_dst:
+        description: "Thư mục đích BP (tương đối từ server_root)"
+        required: true
+        default: "development_behavior_packs/CubeGuard BP"
+      rp_dst:
+        description: "Thư mục đích RP (tương đối từ server_root)"
+        required: true
+        default: "resource_packs/CubeGuard_RP"
+      do_restart:
+        description: "Restart service sau khi deploy? (true/false)"
+        required: true
+        default: "true"
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      # Step 0. Checkout đúng branch người dùng nhập
+      - name: "[Step 0] Checkout branch"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      # Step 1. Đặt biến môi trường từ inputs cho dễ dùng
+      - name: "[Step 1] Export variables"
+        id: vars
+        run: |
+          set -euo pipefail
+          echo "SERVER_ROOT=${{ github.event.inputs.server_root }}" >> "$GITHUB_OUTPUT"
+          echo "SERVICE=${{ github.event.inputs.service_name }}" >> "$GITHUB_OUTPUT"
+          echo "BP_SRC=${{ github.event.inputs.bp_src }}" >> "$GITHUB_OUTPUT"
+          echo "RP_SRC=${{ github.event.inputs.rp_src }}" >> "$GITHUB_OUTPUT"
+          echo "BP_DST=${{ github.event.inputs.bp_dst }}" >> "$GITHUB_OUTPUT"
+          echo "RP_DST=${{ github.event.inputs.rp_dst }}" >> "$GITHUB_OUTPUT"
+          echo "DO_RESTART=${{ github.event.inputs.do_restart }}" >> "$GITHUB_OUTPUT"
+
+      # Step 2. Kiểm tra tiền đề: service tồn tại, server_root hợp lệ, tool có sẵn
+      - name: "[Step 2] Validate prerequisites (service, paths, tools)"
+        run: |
+          set -euo pipefail
+          SERVER_ROOT="${{ steps.vars.outputs.SERVER_ROOT }}"
+          SERVICE="${{ steps.vars.outputs.SERVICE }}"
+
+          echo "• Kiểm tra systemd service: ${SERVICE}"
+          if ! systemctl status "${SERVICE}" --no-pager >/dev/null 2>&1; then
+            echo "::error::Service '${SERVICE}' không tồn tại hoặc systemd không nhận diện."
+            exit 1
+          fi
+
+          echo "• Kiểm tra server root: ${SERVER_ROOT}"
+          if [ ! -d "${SERVER_ROOT}" ]; then
+            echo "::error::SERVER_ROOT không tồn tại: ${SERVER_ROOT}"
+            exit 1
+          fi
+
+          echo "• Kiểm tra binary bedrock_server"
+          if [ ! -x "${SERVER_ROOT}/bedrock_server" ]; then
+            echo "::warning::Không thấy file thực thi bedrock_server hoặc thiếu quyền. Sẽ không chạy ngay trong workflow, nhưng deploy file vẫn tiếp tục."
+          fi
+
+          echo "• Kiểm tra rsync"
+          if ! command -v rsync >/dev/null 2>&1; then
+            echo "::error::Thiếu rsync. Vui lòng cài: sudo apt-get update && sudo apt-get install -y rsync"
+            exit 1
+          fi
+
+      # Step 3. Chuẩn bị thư mục đích; tạo nếu thiếu (đặc biệt path có dấu cách)
+      - name: "[Step 3] Prepare destination directories"
+        run: |
+          set -euo pipefail
+          SERVER_ROOT="${{ steps.vars.outputs.SERVER_ROOT }}"
+          BP_DST_REL="${{ steps.vars.outputs.BP_DST }}"
+          RP_DST_REL="${{ steps.vars.outputs.RP_DST }}"
+
+          BP_DIR="${SERVER_ROOT}/${BP_DST_REL}"
+          RP_DIR="${SERVER_ROOT}/${RP_DST_REL}"
+
+          echo "• Tạo BP dir (nếu thiếu): ${BP_DIR}"
+          mkdir -p "${BP_DIR}"
+
+          echo "• Tạo RP dir (nếu thiếu): ${RP_DIR}"
+          mkdir -p "${RP_DIR}"
+
+      # Step 4. Deploy Behavior Pack (rsync giữ permission, xóa file thừa ở đích)
+      - name: "[Step 4] Deploy Behavior Pack (BP)"
+        run: |
+          set -euo pipefail
+          SERVER_ROOT="${{ steps.vars.outputs.SERVER_ROOT }}"
+          BP_SRC="${{ steps.vars.outputs.BP_SRC }}"
+          BP_DST_REL="${{ steps.vars.outputs.BP_DST }}"
+
+          BP_DIR="${SERVER_ROOT}/${BP_DST_REL}"
+
+          echo "• Kiểm tra nguồn BP: ${BP_SRC}"
+          if [ ! -d "${BP_SRC}" ]; then
+            echo "::error::Không tìm thấy thư mục nguồn BP trong repo: ${BP_SRC}"
+            exit 1
+          fi
+
+          echo "• RSYNC BP → ${BP_DIR}"
+          rsync -av --delete "${BP_SRC}/" "${BP_DIR}/"
+
+      # Step 5. Deploy Resource Pack (rsync giữ permission, xóa file thừa ở đích)
+      - name: "[Step 5] Deploy Resource Pack (RP)"
+        run: |
+          set -euo pipefail
+          SERVER_ROOT="${{ steps.vars.outputs.SERVER_ROOT }}"
+          RP_SRC="${{ steps.vars.outputs.RP_SRC }}"
+          RP_DST_REL="${{ steps.vars.outputs.RP_DST }}"
+
+          RP_DIR="${SERVER_ROOT}/${RP_DST_REL}"
+
+          echo "• Kiểm tra nguồn RP: ${RP_SRC}"
+          if [ ! -d "${RP_SRC}" ]; then
+            echo "::error::Không tìm thấy thư mục nguồn RP trong repo: ${RP_SRC}"
+            exit 1
+          fi
+
+          echo "• RSYNC RP → ${RP_DIR}"
+          rsync -av --delete "${RP_SRC}/" "${RP_DIR}/"
+
+      # Step 6. Kiểm tra manifest tối thiểu (UUID + version) để báo sớm lỗi thường gặp
+      - name: "[Step 6] Quick validate manifests (optional, non-blocking)"
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          SERVER_ROOT="${{ steps.vars.outputs.SERVER_ROOT }}"
+          BP_DST_REL="${{ steps.vars.outputs.BP_DST }}"
+          RP_DST_REL="${{ steps.vars.outputs.RP_DST }}"
+          BP_MAN="${SERVER_ROOT}/${BP_DST_REL}/manifest.json"
+          RP_MAN="${SERVER_ROOT}/${RP_DST_REL}/manifest.json"
+
+          check_manifest () {
+            local file="$1"
+            echo "• Validate manifest: ${file}"
+            if [ ! -f "${file}" ]; then
+              echo "::warning::Thiếu manifest.json tại ${file}"
+              return 0
+            fi
+            # Kiểm tra chuỗi JSON cơ bản (không bắt buộc jq)
+            if ! grep -q '"uuid"' "${file}"; then echo "::warning::Thiếu 'uuid' trong ${file}"; fi
+            if ! grep -q '"version"' "${file}"; then echo "::warning::Thiếu 'version' trong ${file}"; fi
+            if ! grep -q '"modules"' "${file}"; then echo "::warning::Thiếu 'modules' trong ${file}"; fi
+          }
+
+          check_manifest "${BP_MAN}"
+          check_manifest "${RP_MAN}"
+
+      # Step 7. Restart service (tùy chọn theo input)
+      - name: "[Step 7] Restart Bedrock service (optional)"
+        if: ${{ steps.vars.outputs.DO_RESTART == 'true' }}
+        run: |
+          set -euo pipefail
+          SERVICE="${{ steps.vars.outputs.SERVICE }}"
+          echo "• Restart service: ${SERVICE}"
+          sudo systemctl restart "${SERVICE}"
+          echo "• Service status (short):"
+          systemctl --no-pager --lines=20 status "${SERVICE}" || true
+
+      # Step 8. Gợi ý kiểm tra nhanh Pack Stack trong log (không bắt buộc)
+      - name: "[Step 8] Tail last lines of log (optional)"
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          echo "• Gợi ý: kiểm tra /var/log/bedrock.log để thấy Pack Stack + Script Engine"
+          if [ -f /var/log/bedrock.log ]; then
+            tail -n 80 /var/log/bedrock.log || true
+          else
+            echo "::warning::Chưa thấy /var/log/bedrock.log (kiểm tra cấu hình systemd StandardOutput/StandardError)"
+          fi
