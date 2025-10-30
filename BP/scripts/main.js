@@ -1,43 +1,23 @@
-import * as server from "@minecraft/server";
-import {
-  createBlockBreakBroadcastMessage,
-  createBlockBreakDebugMessage,
-} from "./blockBreakHandler.js";
+import { world } from "@minecraft/server";
+import { EntityControllerSystem } from "./core/entity_controller.js";
+import { PandaCreeperController } from "./mobs/panda_creeper_controller.js";
 
-console.warn("[CubeGuard] Script loaded and listening for block break events!");
+// --- System Initialization ---
+// It's good practice to ensure the system is a singleton, 
+// so we'll check if it has been initialized before.
+if (!world.ecs) {
+    world.ecs = new EntityControllerSystem();
+    
+    // --- Controller Registration ---
+    // Register all your custom entity controllers here.
+    // The system will automatically instantiate them when the corresponding entity spawns.
+    
+    world.ecs.registerType("myname:testentity", PandaCreeperController);
+    // To add another mob, you would do:
+    // import { AnotherMobController } from "./mobs/another_mob_controller.js";
+    // world.ecs.registerType("myname:anothermob", AnotherMobController);
 
-const world = server.world;
-
-world.afterEvents.playerBreakBlock.subscribe((event) => {
-  try {
-    const playerName = event?.player?.name ?? "";
-    const blockType = event?.block?.typeId ?? "";
-    const location = event?.block?.location;
-    const dimensionId = event?.block?.dimension?.id ?? "";
-
-    const locationX = location?.x;
-    const locationY = location?.y;
-    const locationZ = location?.z;
-
-    const broadcastMessage = createBlockBreakBroadcastMessage(
-      playerName,
-      blockType,
-      locationX,
-      locationY,
-      locationZ,
-      dimensionId
-    );
-    const debugMessage = createBlockBreakDebugMessage(
-      playerName,
-      blockType,
-      locationX,
-      locationY,
-      locationZ
-    );
-
-    world.sendMessage(broadcastMessage);
-    console.warn(debugMessage);
-  } catch (error) {
-    console.error("[CubeGuard] Error handling blockBreak event:", error);
-  }
-});
+    world.afterEvents.worldInitialize.subscribe(() => {
+        console.log("[Main] Entity Controller System initialized successfully.");
+    });
+}
