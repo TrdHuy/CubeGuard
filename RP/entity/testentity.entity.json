@@ -1,0 +1,53 @@
+{
+	"format_version": "1.8.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "myname:testentity",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/testentity/testentity",
+				"lazy": "textures/entity/testentity/lazy",
+				"worried": "textures/entity/testentity/worried",
+				"playful": "textures/entity/testentity/playful",
+				"brown": "textures/entity/testentity/brown",
+				"weak": "textures/entity/panda/panda_sneezy",
+				"aggressive": "textures/entity/testentity/aggressive",
+				"sneezy": "textures/entity/testentity/sneezy"
+			},
+			"geometry": {
+				"default": "geometry.testentity"
+			},
+			"animations": {
+				"unhappy": "animation.testentity.unhappy",
+				"sneezing": "animation.testentity.sneezing",
+				"walk": "animation.testentity.walk",
+				"look_at_target": "animation.common.look_at_target",
+				"baby_transform": "animation.testentity.baby_transform",
+				"sitting": "animation.testentity.sitting",
+				"rolling": "animation.testentity.rolling",
+				"lying": "animation.testentity.lying"
+			},
+			"animation_controllers": [
+				{
+					"move": "controller.animation.panda.move"
+				},
+				{
+					"unhappy": "controller.animation.panda.unhappy"
+				},
+				{
+					"sneezing": "controller.animation.panda.sneezing"
+				},
+				{
+					"baby": "controller.animation.panda.baby"
+				}
+			],
+			"render_controllers": ["controller.render.panda"],
+			"spawn_egg": {
+				"base_color": "#414d2a",
+				"overlay_color": "#f9f9f9"
+			}
+		}
+	}
+}
