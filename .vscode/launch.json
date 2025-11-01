@@ -2,14 +2,30 @@
   "version": "0.3.0",
   "configurations": [
     {
+      "name": "PowerShell Launch Current File",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${file}",
+      "cwd": "${cwd}"
+    },
+    {
       "type": "minecraft-js",
       "request": "attach",
-      "name": "Debug with Minecraft (Client)",
+      "name": "Build & Attach Debug with Minecraft (Client)",
       "mode": "listen",
       "targetModuleUuid": "5f572fd3-33b7-44fa-9d8f-001bc1997b9b",
       "localRoot": "${workspaceFolder}/BP/scripts",
       "port": 19144,
       "preLaunchTask": "Deploy All"
+    },
+    {
+      "type": "minecraft-js",
+      "request": "attach",
+      "name": "Attach Debug with Minecraft (Client)",
+      "mode": "listen",
+      "targetModuleUuid": "5f572fd3-33b7-44fa-9d8f-001bc1997b9b",
+      "localRoot": "${workspaceFolder}/BP/",
+      "port": 19144
     },
     {
       "type": "node",

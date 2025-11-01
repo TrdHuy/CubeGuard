@@ -4,15 +4,19 @@
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Write-Host "`n=== [CubeGuard Deploy Started at $timestamp] ===" -ForegroundColor Cyan
 
-# Source paths
-$bpSource = "./BP"
-$rpSource = "./RP"
-
-# Destination base paths
-$mojangDestUWP = "$env:LOCALAPPDATA\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang"
-$mojangDestRoaming = "$env:APPDATA\Minecraft Bedrock\Users\Shared\games\com.mojang"
-
-# Function to get pack name from manifest
+# --- Configuration ---
+$buildDir = "./builds"
+$sourceDirs = @{
+    BP = @{ Path = "./BP"; Type = "development_behavior_packs"; DestType = "Behavior Pack" }
+    RP = @{ Path = "./RP"; Type = "development_resource_packs"; DestType = "Resource Pack" }
+    SP = @{ Path = "./SP"; Type = "development_skin_packs"; DestType = "Skin Pack" }
+    WT = @{ Path = "./WT"; Type = "world_templates"; DestType = "World Template" }
+}
+$mojangDestinations = @(
+    # @{ Path = "$env:LOCALAPPDATA\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang"; Name = "UWP Storage" },
+    @{ Path = "$env:APPDATA\Minecraft Bedrock\Users\Shared\games\com.mojang"; Name = "Roaming Storage" }
+)
+# --- Helper Functions ---
 function Get-PackName($manifestPath) {
     try {
         $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
@@ -24,18 +28,48 @@ function Get-PackName($manifestPath) {
     }
 }
 
-function Deploy-Pack($src, $dst, $packType, $destName) {
+# --- Deploy Function ---
+function Invoke-Deploy() {
+    Write-Host "`n--- [Deploy] Deploying packs from build directory ---" -ForegroundColor Magenta
+    foreach ($key in $sourceDirs.Keys) {
+        $sourceInfo = $sourceDirs[$key]
+        $srcPath = $sourceInfo.Path
+        if (-not (Test-Path $srcPath)) {
+            continue # Skip if source folder doesn't exist
+        }
+
+        $packName = Get-PackName "$srcPath/manifest.json"
+        if (-not $packName) {
+            Write-Host "[$key] Could not get pack name from source. Skipping." -ForegroundColor Red
+            continue
+        }
+
+        $builtPackPath = "$buildDir/$packName/$key"
+        if (-not (Test-Path $builtPackPath)) {
+            Write-Host "[$key] Built pack '$builtPackPath' not found. Skipping." -ForegroundColor Red
+            continue
+        }
+
+        $packType = $sourceInfo.Type
+        $destType = $sourceInfo.DestType
+        
+        Write-Host "`n--- Deploying $destType ($packName) ---" -ForegroundColor Cyan
+        foreach ($destination in $mojangDestinations) {
+            $destPath = "$($destination.Path)/$packType/$packName"
+            Deploy-Single-Pack $builtPackPath $destPath $destType $destination.Name
+        }
+    }
+}
+
+function Deploy-Single-Pack($src, $dst, $packType, $destName) {
     try {
-        Write-Host "`n[$packType -> $destName] Cleaning old folder..." -ForegroundColor Yellow
+        Write-Host "[$packType -> $destName] Cleaning old folder..." -ForegroundColor Yellow
         if (Test-Path $dst) {
             Remove-Item -Recurse -Force $dst
         }
-        New-Item -ItemType Directory -Force -Path $dst | Out-Null
-
-        Write-Host "[$packType -> $destName] Copying contents of '$src' to '$dst'..." -ForegroundColor Yellow
-        Get-ChildItem -Path $src -Force | ForEach-Object {
-            Copy-Item -Recurse -Force $_.FullName -Destination $dst
-        }
+        
+        Write-Host "[$packType -> $destName] Copying '$src' to '$dst'..." -ForegroundColor Yellow
+        Copy-Item -Recurse -Force $src -Destination $dst
 
         Write-Host "[$packType -> $destName] ✅ Deploy completed successfully." -ForegroundColor Green
     }
@@ -44,29 +78,18 @@ function Deploy-Pack($src, $dst, $packType, $destName) {
     }
 }
 
-# Get pack names
-$bpName = Get-PackName "$bpSource/manifest.json"
-$rpName = Get-PackName "$rpSource/manifest.json"
-
-if (-not $bpName -or -not $rpName) {
-    Write-Host "`n=== [CubeGuard Deploy Failed: Could not read pack names from manifest.json] ===" -ForegroundColor Red
+# --- Main Execution ---
+Write-Host "`n--- [Step 1] Running Build Script ---" -ForegroundColor Green
+try {
+    # Execute the build script
+    pwsh -File ./scripts/build.ps1
+}
+catch {
+    Write-Host "❌ Build script failed. Aborting deploy." -ForegroundColor Red
     exit 1
 }
 
-# --- Deploy Behavior Pack ---
-Write-Host "`n--- Deploying Behavior Pack ($bpName) ---" -ForegroundColor Magenta
-$bpDestUWP = "$mojangDestUWP\development_behavior_packs\$bpName"
-$bpDestRoaming = "$mojangDestRoaming\development_behavior_packs\$bpName"
-Deploy-Pack $bpSource $bpDestUWP "Behavior Pack" "UWP Storage"
-Deploy-Pack $bpSource $bpDestRoaming "Behavior Pack" "Roaming Storage"
-
-
-# --- Deploy Resource Pack ---
-Write-Host "`n--- Deploying Resource Pack ($rpName) ---" -ForegroundColor Magenta
-$rpDestUWP = "$mojangDestUWP\development_resource_packs\$rpName"
-$rpDestRoaming = "$mojangDestRoaming\development_resource_packs\$rpName"
-Deploy-Pack $rpSource $rpDestUWP "Resource Pack" "UWP Storage"
-Deploy-Pack $rpSource $rpDestRoaming "Resource Pack" "Roaming Storage"
-
+# Proceed with deploy only if build was successful
+Invoke-Deploy
 
 Write-Host "`n=== [CubeGuard Deploy Finished] ===" -ForegroundColor Cyan

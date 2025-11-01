@@ -10,7 +10,23 @@
         "Bypass",
         "-File",
         "./scripts/deploy.ps1"
-      ]
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Build",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "./scripts/build.ps1"
+      ],
+      "group": "build"
     },
     {
       "label": "Test BP",
