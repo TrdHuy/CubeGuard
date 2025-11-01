@@ -1,43 +1,62 @@
-import * as server from "@minecraft/server";
-import {
-  createBlockBreakBroadcastMessage,
-  createBlockBreakDebugMessage,
-} from "./blockBreakHandler.js";
+import { world } from "@minecraft/server";
+import { createBlockBreakBroadcastMessage, createBlockBreakDebugMessage } from "./blockBreakHandler.js";
+import { EntityControllerSystem } from "./core/entity_controller.js";
+import { PandaCreeperController } from "./mobs/panda_creeper_controller.js";
 
-console.warn("[CubeGuard] Script loaded and listening for block break events!");
+// ============================================================================
+// VÙNG LOGIC CŨ - DÀNH CHO DEBUG
+// ============================================================================
 
-const world = server.world;
+// Lắng nghe sự kiện khi một khối bị phá hủy
+world.afterEvents.blockBreak.subscribe(event => {
+    const { player, block, dimension } = event;
+    const playerName = player.name;
+    const blockType = block.typeId;
+    const location = block.location;
+    const dimensionId = dimension.id;
 
-world.afterEvents.playerBreakBlock.subscribe((event) => {
-  try {
-    const playerName = event?.player?.name ?? "";
-    const blockType = event?.block?.typeId ?? "";
-    const location = event?.block?.location;
-    const dimensionId = event?.block?.dimension?.id ?? "";
-
-    const locationX = location?.x;
-    const locationY = location?.y;
-    const locationZ = location?.z;
-
+    // Tạo và gửi tin nhắn broadcast
     const broadcastMessage = createBlockBreakBroadcastMessage(
-      playerName,
-      blockType,
-      locationX,
-      locationY,
-      locationZ,
-      dimensionId
+        playerName,
+        blockType,
+        location.x,
+        location.y,
+        location.z,
+        dimensionId
     );
-    const debugMessage = createBlockBreakDebugMessage(
-      playerName,
-      blockType,
-      locationX,
-      locationY,
-      locationZ
-    );
-
     world.sendMessage(broadcastMessage);
-    console.warn(debugMessage);
-  } catch (error) {
-    console.error("[CubeGuard] Error handling blockBreak event:", error);
-  }
+
+    // Tạo và ghi log tin nhắn debug
+    const debugMessage = createBlockBreakDebugMessage(
+        playerName,
+        blockType,
+        location.x,
+        location.y,
+        location.z
+    );
+    console.log(debugMessage);
 });
+
+
+// ============================================================================
+// VÙNG LOGIC MỚI - HỆ THỐNG ENTITY CONTROLLER
+// ============================================================================
+
+// --- Khởi tạo Hệ thống ---
+// Đảm bảo hệ thống là một singleton bằng cách kiểm tra xem nó đã được khởi tạo chưa.
+if (!world.ecs) {
+    world.ecs = new EntityControllerSystem();
+    
+    // --- Đăng ký Controller ---
+    // Đăng ký tất cả các controller tùy chỉnh của bạn tại đây.
+    // Hệ thống sẽ tự động tạo instance của chúng khi entity tương ứng xuất hiện.
+    
+    world.ecs.registerType("myname:testentity", PandaCreeperController);
+    // Để thêm một mob khác, bạn sẽ làm như sau:
+    // import { AnotherMobController } from "./mobs/another_mob_controller.js";
+    // world.ecs.registerType("myname:anothermob", AnotherMobController);
+
+    world.afterEvents.worldInitialize.subscribe(() => {
+        console.log("[Main] Entity Controller System initialized successfully.");
+    });
+}
