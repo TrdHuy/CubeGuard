@@ -22,87 +22,102 @@
 // 📅 Ngày tạo: 2025-10-30
 // ♻️ Cập nhật: 2025-11-01
 // ============================================================================
+
 import { world, system, Entity, EntitySpawnAfterEvent, EntityRemoveAfterEvent } from "@minecraft/server";
+
+// Define a type for the constructor of a class that extends EntityController
+type ControllerConstructor = new (entity: Entity) => EntityController;
+
 // ====================== TRIỂN KHAI API CÔNG KHAI ==========================
+
 class EntityController {
-    entity;
-    tick;
-    isAlive;
-    constructor(entity) {
+    entity: Entity;
+    tick: number;
+    isAlive: boolean;
+
+    constructor(entity: Entity) {
         this.entity = entity;
         this.tick = 0;
         this.isAlive = true;
     }
-    OnSpawn() { }
-    OnUpdate(_deltaTime) {
+
+    OnSpawn(): void {}
+    OnUpdate(_deltaTime: number): void {
         this.tick++;
     }
-    OnDestroy() {
+    OnDestroy(): void {
         this.isAlive = false;
     }
 }
+
 class EntityControllerSystem {
-    controllers;
-    registry;
-    lastTick;
+    private controllers: Map<string, EntityController>;
+    private registry: Map<string, ControllerConstructor>;
+    private lastTick: number;
+
     constructor() {
         this.controllers = new Map();
         this.registry = new Map();
         this.lastTick = Date.now();
         this._initEvents();
     }
+
     // Đăng ký một lớp Controller cho một loại mob (typeId) cụ thể.
-    registerType(typeId, ControllerClass) {
-        if (typeof typeId !== "string")
-            throw new Error("typeId phải là string");
+    registerType(typeId: string, ControllerClass: ControllerConstructor): void {
+        if (typeof typeId !== "string") throw new Error("typeId phải là string");
         this.registry.set(typeId, ControllerClass);
     }
+
     // Lấy tổng số controller đang hoạt động.
     getControllerCount() {
         return this.controllers.size;
     }
+
     // Xóa toàn bộ controller đang hoạt động, reset lại hệ thống.
     clearAllControllers() {
         this.controllers.clear();
     }
+
     // ====================== TRIỂN KHAI LOGIC NỘI BỘ ===========================
-    _initEvents() {
-        world.afterEvents.entitySpawn.subscribe((ev) => this._onEntitySpawn(ev));
-        world.afterEvents.entityRemove.subscribe((ev) => this._onEntityRemove(ev));
+
+    _initEvents(): void {
+        world.afterEvents.entitySpawn.subscribe((ev: EntitySpawnAfterEvent) => this._onEntitySpawn(ev));
+        world.afterEvents.entityRemove.subscribe((ev: EntityRemoveAfterEvent) => this._onEntityRemove(ev));
         system.runInterval(() => this._updateControllers());
     }
-    _onEntitySpawn(ev) {
+
+    private _onEntitySpawn(ev: EntitySpawnAfterEvent): void {
         const typeId = ev.entity.typeId;
-        if (!this.registry.has(typeId))
-            return;
+        if (!this.registry.has(typeId)) return;
+
         const ControllerClass = this.registry.get(typeId);
-        if (!ControllerClass)
-            return;
+        if (!ControllerClass) return;
+
         const controller = new ControllerClass(ev.entity);
         this.controllers.set(ev.entity.id, controller);
         try {
             controller.OnSpawn();
-        }
-        catch (err) {
+        } catch (err) {
             console.warn(`❌ Error in ${controller.constructor.name}.OnSpawn: ${err}`);
         }
     }
-    _onEntityRemove(ev) {
+
+    private _onEntityRemove(ev: EntityRemoveAfterEvent): void {
         const ctrl = this.controllers.get(ev.removedEntityId);
-        if (!ctrl)
-            return;
+        if (!ctrl) return;
         try {
             ctrl.OnDestroy();
-        }
-        catch (err) {
+        } catch (err) {
             console.warn(`❌ Error in ${ctrl.constructor.name}.OnDestroy: ${err}`);
         }
         this.controllers.delete(ev.removedEntityId);
     }
-    _updateControllers() {
+
+    private _updateControllers(): void {
         const now = Date.now();
         const delta = (now - this.lastTick) / 1000;
         this.lastTick = now;
+
         for (const [id, ctrl] of this.controllers.entries()) {
             if (!ctrl.entity || !ctrl.entity.isValid()) {
                 this.controllers.delete(id);
@@ -110,13 +125,13 @@ class EntityControllerSystem {
             }
             try {
                 ctrl.OnUpdate(delta);
-            }
-            catch (err) {
+            } catch (err) {
                 console.warn(`❌ Error in ${ctrl.constructor.name}.OnUpdate: ${err}`);
             }
         }
     }
 }
+
 // ====================== XUẤT MODULES ====================================
+
 export { EntityControllerSystem, EntityController };
-//# sourceMappingURL=entity_controller.js.map

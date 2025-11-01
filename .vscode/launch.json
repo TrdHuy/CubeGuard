@@ -2,6 +2,18 @@
   "version": "0.3.0",
   "configurations": [
     {
+      "name": "Debug Jest Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/node_modules/jest/bin/jest.js",
+        "--runInBand"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "PowerShell Launch Current File",
       "type": "PowerShell",
       "request": "launch",
@@ -24,20 +36,10 @@
       "name": "Attach Debug with Minecraft (Client)",
       "mode": "listen",
       "targetModuleUuid": "5f572fd3-33b7-44fa-9d8f-001bc1997b9b",
-      "localRoot": "${workspaceFolder}/BP/",
+      "sourceMapRoot": "${workspaceFolder}/src/BP/",
+      "generatedSourceRoot": "${workspaceFolder}/BP/scripts/",
+      "localRoot": "${workspaceFolder}/BP/scripts/",
       "port": 19144
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Run BP Tests",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "test",
-        "--"
-      ],
-      "cwd": "${workspaceFolder}/BP",
-      "console": "integratedTerminal"
     }
   ]
 }

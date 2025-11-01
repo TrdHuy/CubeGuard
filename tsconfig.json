@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "es2022",
+    "lib": ["es2023"],
+    "moduleDetection": "force",
+
+    /* Modules */
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "verbatimModuleSyntax": true,
+
+    /* Emit */
+    "outDir": "./BP/scripts",
+    "sourceMap": true,
+    "inlineSources": true,
+    
+    /* Interop Constraints */
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Type Checking */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+
+    /* Project Structure */
+    "rootDir": "./src/main/BP"
+  },
+  "include": ["src/main/BP/**/*.ts"],
+  "exclude": ["node_modules"]
+}

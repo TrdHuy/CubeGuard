@@ -6,3 +6,6 @@ Desktop.ini
 !.bridge/extensions
 builds
 */node_modules/*
+node_modules
+coverage
+*.js.map
