@@ -46,6 +46,13 @@ function Invoke-PreBuild() {
 }
 
 function Invoke-OnBuild() {
+    Write-Host "`n--- [On-Build] Building TypeScript files ---" -ForegroundColor Magenta
+    npm run build
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ TypeScript build failed. Aborting." -ForegroundColor Red
+        exit 1
+    }
+
     Write-Host "`n--- [On-Build] Copying and renaming packs ---" -ForegroundColor Magenta
     foreach ($key in $sourceDirs.Keys) {
         $sourceInfo = $sourceDirs[$key]
