@@ -2,6 +2,7 @@ import { world, PlayerBreakBlockAfterEvent } from "@minecraft/server";
 import { createBlockBreakBroadcastMessage, createBlockBreakDebugMessage } from "./blockBreakHandler.js";
 import { EntityControllerSystem } from "./core/entity_controller.js";
 import { PandaCreeperController } from "./mobs/panda_creeper_controller.js";
+import "./core/commands/SpawnBlockPaletteCommand.js";
 console.log("[Main] Begin the script: v0.0.1");
 
 
