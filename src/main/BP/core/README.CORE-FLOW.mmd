@@ -1,0 +1,23 @@
+flowchart TD
+
+    %% ROOT CORE
+    subgraph CORE["📦 core/"]
+    end
+
+    %% DOMAIN
+    subgraph DOMAIN["📂 core/domain/"]
+    end
+
+    %% API WRAPPER
+    subgraph WRAPPER["🔌 core/api_wrapper"]
+    end
+
+    %% INTERACTIONS
+    %% root core calls domain & wrapper
+    CORE --> WRAPPER
+
+    CORE --> DOMAIN
+    %% wrapper uses converters
+    WRAPPER --> DOMAIN
+
+    %% converters return domain objects

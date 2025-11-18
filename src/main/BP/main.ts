@@ -66,7 +66,8 @@ if (!world.ecs) {
     // import { AnotherMobController } from "./mobs/another_mob_controller.js";
     // world.ecs.registerType("myname:anothermob", AnotherMobController);
 
-    world.afterEvents.worldInitialize.subscribe(() => {
+    world.afterEvents.worldLoad.subscribe(() => {
         console.log("[Main] Entity Controller System initialized successfully.");
     });
+
 }

@@ -119,7 +119,7 @@ class EntityControllerSystem {
         this.lastTick = now;
 
         for (const [id, ctrl] of this.controllers.entries()) {
-            if (!ctrl.entity || !ctrl.entity.isValid()) {
+            if (!ctrl.entity /*|| !ctrl.entity.isValid()*/) {
                 this.controllers.delete(id);
                 continue;
             }

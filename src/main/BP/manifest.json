@@ -60,16 +60,12 @@
 			]
 		},
 		{
-			"module_name": "@minecraft/server-gametest",
-			"version": "1.0.0-beta"
-		},
-		{
 			"module_name": "@minecraft/server",
-			"version": "1.19.0"
+			"version": "2.3.0"
 		},
 		{
 			"module_name": "@minecraft/server-bindings",
-			"version": "1.19.0"
+			"version": "2.3.0"
 		}
 	]
 }
