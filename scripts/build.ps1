@@ -53,6 +53,9 @@ function Invoke-OnBuild() {
         exit 1
     }
 
+    Write-Host "`n--- [On-Build] Copying manifest.json to BP ---" -ForegroundColor Magenta
+    Copy-Item -Path "src/main/BP/manifest.json" -Destination "BP/manifest.json" -Force
+
     Write-Host "`n--- [On-Build] Copying and renaming packs ---" -ForegroundColor Magenta
     foreach ($key in $sourceDirs.Keys) {
         $sourceInfo = $sourceDirs[$key]
