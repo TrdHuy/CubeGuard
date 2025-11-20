@@ -1,6 +1,12 @@
 // core/api_wrapper/minecraft/CommandAPI.ts
 import { system, CommandPermissionLevel, CustomCommandParamType } from "@minecraft/server";
 
+export const CommandPermissions = { ...CommandPermissionLevel };
+export const CommandParameters = { ...CustomCommandParamType };
+
+type CommandPermission = (typeof CommandPermissions)[keyof typeof CommandPermissions];
+type CommandParameterType = (typeof CommandParameters)[keyof typeof CommandParameters];
+
 export type CommandSenderSnapshot =
     | {
           type: "entity";
@@ -19,11 +25,19 @@ export type CommandSenderSnapshot =
 export interface CustomCommandDefinition {
     name: string;
     description: string;
-    permission?: CommandPermissionLevel;
-    parameters?: { name: string; type: CustomCommandParamType }[];
+    permission?: CommandPermission;
+    parameters?: { name: string; type: CommandParameterType }[];
 }
 
 export class CustomCommandAPI {
+    static getPermission(level: keyof typeof CommandPermissions): CommandPermission {
+        return CommandPermissions[level];
+    }
+
+    static getParameterType(type: keyof typeof CommandParameters): CommandParameterType {
+        return CommandParameters[type];
+    }
+
     private static buildSenderSnapshot(ctx: any): CommandSenderSnapshot {
         if (ctx?.sender) {
             return {
@@ -54,7 +68,7 @@ export class CustomCommandAPI {
             const cmdDef = {
                 name: def.name,
                 description: def.description,
-                permissionLevel: def.permission ?? CommandPermissionLevel.Admin,
+                permissionLevel: def.permission ?? this.getPermission("Admin"),
                 overloads: [
                     {
                         parameters: def.parameters ?? [],

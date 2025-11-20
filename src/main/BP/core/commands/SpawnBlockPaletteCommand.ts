@@ -1,6 +1,5 @@
 import { CustomCommandAPI } from "../api_wrapper/minecraft";
 import { BlockPaletteSpawner } from "../api_wrapper/minecraft/BlockPaletteSpawner";
-import { CommandPermissionLevel, CustomCommandParamType } from "@minecraft/server";
 
 export class SpawnBlockPaletteCommand {
     static register() {
@@ -8,14 +7,14 @@ export class SpawnBlockPaletteCommand {
             {
                 name: "spawnblockpalette",
                 description: "Spawn a palette of every block in a grid for quick browsing",
-                permission: CommandPermissionLevel.Admin,
+                permission: CustomCommandAPI.getPermission("Admin"),
                 parameters: [
-                    { name: "dimensionId", type: CustomCommandParamType.String },
-                    { name: "maxBlocks", type: CustomCommandParamType.Integer },
-                    { name: "spacing", type: CustomCommandParamType.Float },
-                    { name: "gridWidth", type: CustomCommandParamType.Integer },
-                    { name: "layerHeight", type: CustomCommandParamType.Integer },
-                    { name: "origin", type: CustomCommandParamType.Location },
+                    { name: "dimensionId", type: CustomCommandAPI.getParameterType("String") },
+                    { name: "maxBlocks", type: CustomCommandAPI.getParameterType("Integer") },
+                    { name: "spacing", type: CustomCommandAPI.getParameterType("Float") },
+                    { name: "gridWidth", type: CustomCommandAPI.getParameterType("Integer") },
+                    { name: "layerHeight", type: CustomCommandAPI.getParameterType("Integer") },
+                    { name: "origin", type: CustomCommandAPI.getParameterType("Location") },
                 ],
             },
             ({ sender, args }) => {
