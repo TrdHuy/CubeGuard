@@ -12,7 +12,12 @@ jest.mock("@minecraft/server", () => {
             },
         },
         CommandPermissionLevel: { Admin: "admin" },
-        CustomCommandParamType: { string: "string" },
+        CustomCommandParamType: {
+            String: "string",
+            Integer: "integer",
+            Float: "float",
+            Location: "location",
+        },
     };
 });
 

@@ -9,6 +9,12 @@ jest.mock("@minecraft/server", () => {
     return {
         system: { beforeEvents: { startup: { subscribe: startupSubscribe } } },
         CommandPermissionLevel: { Admin: "admin" },
+        CustomCommandParamType: {
+            String: "string",
+            Integer: "integer",
+            Float: "float",
+            Location: "location",
+        },
         world: { getDimension },
         BlockTypes: { getAll: getAllBlocks },
     };
