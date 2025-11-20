@@ -38,8 +38,12 @@ export class BlockPaletteSpawner {
 
             try {
                 const block = dimension.getBlock(location);
-                block.setType(blockType);
-                placed++;
+                if (block) {
+                    block.setType(blockType);
+                    placed++;
+                } else {
+                    failed++;
+                }
             } catch (error) {
                 failed++;
             }
