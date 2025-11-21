@@ -45,22 +45,20 @@
     {
       "type": "minecraft-js",
       "request": "attach",
-      "name": "Build & Attach Debug with Minecraft (Client)",
+      "name": "Attach to Minecraft",
       "mode": "listen",
-      "targetModuleUuid": "5f572fd3-33b7-44fa-9d8f-001bc1997b9b",
       "localRoot": "${workspaceFolder}/BP/scripts",
-      "port": 19144,
-      "preLaunchTask": "Deploy All"
+      "host": "localhost",
+      "port": 19144
     },
     {
       "type": "minecraft-js",
       "request": "attach",
       "name": "Attach Debug with Minecraft (Client)",
       "mode": "listen",
-      "targetModuleUuid": "5f572fd3-33b7-44fa-9d8f-001bc1997b9b",
-      "sourceMapRoot": "${workspaceFolder}/src/BP/",
-      "generatedSourceRoot": "${workspaceFolder}/BP/scripts/",
-      "localRoot": "${workspaceFolder}/BP/scripts/",
+      "localRoot": "${workspaceFolder}/BP/scripts",
+      "generatedSourceRoot": "${workspaceFolder}/BP/scripts",
+      "sourceMapRoot": "${workspaceFolder}/BP/scripts",
       "port": 19144
     }
   ]
