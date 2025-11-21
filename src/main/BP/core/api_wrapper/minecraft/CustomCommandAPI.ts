@@ -1,5 +1,13 @@
 // core/api_wrapper/minecraft/CommandAPI.ts
-import { system, CommandPermissionLevel, CustomCommandParamType } from "@minecraft/server";
+import {
+    system,
+    CommandPermissionLevel,
+    CustomCommandParamType,
+    CustomCommand,
+    CustomCommandOrigin,
+    CustomCommandParameter,
+    StartupEvent,
+} from "@minecraft/server";
 
 export const CommandPermissions = { ...CommandPermissionLevel };
 export const CommandParameters = { ...CustomCommandParamType };
@@ -22,11 +30,18 @@ export type CommandSenderSnapshot =
       }
     | { type: "unknown" };
 
+export type CommandParameterDefinition = { name: string; type: CommandParameterType };
+
 export interface CustomCommandDefinition {
     name: string;
     description: string;
     permission?: CommandPermission;
-    parameters?: { name: string; type: CommandParameterType }[];
+    mandatoryParameters?: CommandParameterDefinition[];
+    optionalParameters?: CommandParameterDefinition[];
+    /**
+     * @deprecated Use mandatoryParameters or optionalParameters instead.
+     */
+    parameters?: CommandParameterDefinition[];
 }
 
 export class CustomCommandAPI {
@@ -38,22 +53,26 @@ export class CustomCommandAPI {
         return CommandParameters[type];
     }
 
-    private static buildSenderSnapshot(ctx: any): CommandSenderSnapshot {
-        if (ctx?.sender) {
+    private static toRegistryParameters(parameters?: CommandParameterDefinition[]): CustomCommandParameter[] | undefined {
+        return parameters?.map(parameter => ({ name: parameter.name, type: parameter.type } as CustomCommandParameter));
+    }
+
+    private static buildSenderSnapshot(ctx: CustomCommandOrigin): CommandSenderSnapshot {
+        if (ctx?.sourceEntity) {
             return {
                 type: "entity",
-                name: ctx.sender?.nameTag ?? ctx.sender?.typeId ?? "",
-                dimensionId: ctx.sender?.dimension?.id,
-                location: ctx.sender?.location,
+                name: ctx.sourceEntity?.nameTag ?? ctx.sourceEntity?.typeId ?? "",
+                dimensionId: ctx.sourceEntity?.dimension?.id,
+                location: ctx.sourceEntity?.location,
             };
         }
 
-        if (ctx?.block) {
+        if (ctx?.sourceBlock) {
             return {
                 type: "block",
-                blockTypeId: ctx.block?.typeId,
-                dimensionId: ctx.block?.dimension?.id,
-                location: ctx.block?.location,
+                blockTypeId: ctx.sourceBlock?.typeId,
+                dimensionId: ctx.sourceBlock?.dimension?.id,
+                location: ctx.sourceBlock?.location,
             };
         }
 
@@ -64,22 +83,20 @@ export class CustomCommandAPI {
         def: CustomCommandDefinition,
         callback: (input: { sender: CommandSenderSnapshot; args: any[] }) => { message: string; status: number }
     ) {
-        system.beforeEvents.startup.subscribe((ev: any) => {
-            const cmdDef = {
+        system.beforeEvents.startup.subscribe((ev: StartupEvent) => {
+            const cmdDef: CustomCommand = {
                 name: def.name,
                 description: def.description,
                 permissionLevel: def.permission ?? this.getPermission("Admin"),
-                overloads: [
-                    {
-                        parameters: def.parameters ?? [],
-                    },
-                ],
+                mandatoryParameters: this.toRegistryParameters(def.mandatoryParameters),
+                optionalParameters:
+                    this.toRegistryParameters(def.optionalParameters ?? def.parameters) ?? this.toRegistryParameters([]),
             };
 
-            ev.customCommandRegistry.registerCommand(cmdDef, (ctx: any, args: any[]) => {
+            ev.customCommandRegistry.registerCommand(cmdDef, (ctx: CustomCommandOrigin, ...args: any[]) => {
                 return callback({
                     sender: this.buildSenderSnapshot(ctx),
-                    args: args,
+                    args,
                 });
             });
         });

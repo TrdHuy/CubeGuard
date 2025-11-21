@@ -25,7 +25,7 @@ type StartupHandler = (ev: any) => void;
 
 type RegisteredCommand = {
     definition: any;
-    handler: (ctx: any, args: any[]) => any;
+    handler: (ctx: any, ...args: any[]) => any;
 };
 
 describe("CustomCommandAPI", () => {
@@ -77,7 +77,7 @@ describe("CustomCommandAPI", () => {
         });
 
         const args = ["one", 2, { complex: true }];
-        registeredCommand?.handler({ sender: { nameTag: "Tester" } }, args);
+        registeredCommand?.handler({ sourceEntity: { nameTag: "Tester" } }, ...args);
 
         expect(callback).toHaveBeenCalledWith({
             sender: expect.objectContaining({ type: "entity", name: "Tester" }),
@@ -98,25 +98,23 @@ describe("CustomCommandAPI", () => {
 
         registeredCommand?.handler(
             {
-                sender: {
+                sourceEntity: {
                     nameTag: "PlayerOne",
                     location: { x: 1, y: 2, z: 3 },
                     dimension: { id: "overworld" },
                     typeId: "minecraft:player",
                 },
-            },
-            []
+            }
         );
 
         registeredCommand?.handler(
             {
-                block: {
+                sourceBlock: {
                     typeId: "minecraft:command_block",
                     location: { x: 4, y: 5, z: 6 },
                     dimension: { id: "nether" },
                 },
-            },
-            []
+            }
         );
 
         expect(snapshots[0]).toEqual({

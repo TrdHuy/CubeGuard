@@ -21,7 +21,7 @@ jest.mock("@minecraft/server", () => {
 });
 
 describe("SpawnBlockPaletteCommand", () => {
-    let commandHandler: ((ctx: any, args: any[]) => any) | undefined;
+    let commandHandler: ((ctx: any, ...args: any[]) => any) | undefined;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -43,13 +43,13 @@ describe("SpawnBlockPaletteCommand", () => {
         SpawnBlockPaletteCommand.register();
 
         expect(commandHandler).toBeDefined();
-        const noDimensionResult = commandHandler?.({}, []);
+        const noDimensionResult = commandHandler?.({});
         expect(noDimensionResult).toEqual({ message: "Failed: No dimension provided", status: 1 });
 
         const senderCtx = {
-            sender: { location: { x: 5, y: 6, z: 7 }, dimension: { id: "overworld" }, nameTag: "Tester" },
+            sourceEntity: { location: { x: 5, y: 6, z: 7 }, dimension: { id: "overworld" }, nameTag: "Tester" },
         };
-        const response = commandHandler?.(senderCtx, []);
+        const response = commandHandler?.(senderCtx);
         expect(spawnSpy).toHaveBeenCalledWith({
             dimensionId: "overworld",
             origin: { x: 5, y: 6, z: 7 },
@@ -65,9 +65,9 @@ describe("SpawnBlockPaletteCommand", () => {
         const spawnSpy = jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({ placed: 2, failed: 0, attempted: 2 });
         SpawnBlockPaletteCommand.register();
 
-        const ctx = { sender: { location: { x: 0, y: 0, z: 0 }, dimension: { id: "overworld" } } };
+        const ctx = { sourceEntity: { location: { x: 0, y: 0, z: 0 }, dimension: { id: "overworld" } } };
 
-        commandHandler?.(ctx, ["overworld", -5]);
+        commandHandler?.(ctx, "overworld", -5);
         expect(spawnSpy).toHaveBeenLastCalledWith({
             dimensionId: "overworld",
             origin: { x: 0, y: 0, z: 0 },
@@ -77,7 +77,7 @@ describe("SpawnBlockPaletteCommand", () => {
             layerHeight: undefined,
         });
 
-        commandHandler?.(ctx, ["overworld", 12]);
+        commandHandler?.(ctx, "overworld", 12);
         expect(spawnSpy).toHaveBeenLastCalledWith({
             dimensionId: "overworld",
             origin: { x: 0, y: 0, z: 0 },
@@ -92,8 +92,8 @@ describe("SpawnBlockPaletteCommand", () => {
         jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({ placed: 3, failed: 2, attempted: 5 });
         SpawnBlockPaletteCommand.register();
 
-        const ctx = { sender: { location: { x: 1, y: 1, z: 1 }, dimension: { id: "nether" } } };
-        const result = commandHandler?.(ctx, ["nether", 5, 2, 2, 3, { x: 1, y: 2, z: 3 }]);
+        const ctx = { sourceEntity: { location: { x: 1, y: 1, z: 1 }, dimension: { id: "nether" } } };
+        const result = commandHandler?.(ctx, "nether", 5, 2, 2, 3, { x: 1, y: 2, z: 3 });
 
         expect(result).toEqual({ message: "Spawned 3/5 blocks with 2 failures", status: 1 });
     });
