@@ -1,19 +1,12 @@
 // core/api_wrapper/minecraft/CommandAPI.ts
-import {
-    system,
-    CommandPermissionLevel,
-    CustomCommandParamType,
-    CustomCommand,
-    CustomCommandOrigin,
-    CustomCommandParameter,
-    StartupEvent,
-} from "@minecraft/server";
+import { system, CommandPermissionLevel, CustomCommandParamType } from "@minecraft/server";
+import type { CustomCommand, CustomCommandOrigin, CustomCommandParameter, StartupEvent } from "@minecraft/server";
 
-export const CommandPermissions = { ...CommandPermissionLevel };
-export const CommandParameters = { ...CustomCommandParamType };
+export const CommandPermissions: typeof CommandPermissionLevel = CommandPermissionLevel;
+export const CommandParameters: typeof CustomCommandParamType = CustomCommandParamType;
 
-type CommandPermission = (typeof CommandPermissions)[keyof typeof CommandPermissions];
-type CommandParameterType = (typeof CommandParameters)[keyof typeof CommandParameters];
+type CommandPermission = CommandPermissionLevel;
+type CommandParameterType = CustomCommandParamType;
 
 export type CommandSenderSnapshot =
     | {
