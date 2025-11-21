@@ -1,11 +1,11 @@
-import { CustomCommandAPI } from "../api_wrapper/minecraft";
+import { CustomCommandAPI } from "../api_wrapper/minecraft/CustomCommandAPI";
 import { BlockPaletteSpawner } from "../api_wrapper/minecraft/BlockPaletteSpawner";
 
 export class SpawnBlockPaletteCommand {
     static register() {
         CustomCommandAPI.registerCommand(
             {
-                name: "spawnblockpalette",
+                name: "creator:spawnblockpalette",
                 description: "Spawn a palette of every block in a grid for quick browsing",
                 permission: CustomCommandAPI.getPermission("Admin"),
                 parameters: [
