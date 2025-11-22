@@ -1,5 +1,6 @@
 import { CustomCommandAPI } from "../api_wrapper/minecraft/CustomCommandAPI";
 import { BlockPaletteSpawner } from "../api_wrapper/minecraft/BlockPaletteSpawner";
+import { NextTickScheduler } from "../api_wrapper/minecraft/NextTickScheduler";
 export class SpawnBlockPaletteCommand {
     static register() {
         CustomCommandAPI.registerCommand(
@@ -28,7 +29,7 @@ export class SpawnBlockPaletteCommand {
 
                 const parsedMaxBlocks = typeof maxBlocksArg === "number" && maxBlocksArg > 0 ? Math.floor(maxBlocksArg) : undefined;
 
-                CustomCommandAPI.nextTick().then(() => {
+                NextTickScheduler.nextTick().then(() => {
                     const result = BlockPaletteSpawner.spawn({
                         dimensionId,
                         origin: origin ?? { x: 0, y: 0, z: 0 },

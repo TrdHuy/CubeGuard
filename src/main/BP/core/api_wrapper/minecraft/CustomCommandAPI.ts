@@ -38,12 +38,6 @@ export interface CustomCommandDefinition {
 }
 
 export class CustomCommandAPI {
-
-    static nextTick(): Promise<void> {
-        return new Promise((resolve) => {
-            system.runTimeout(() => resolve(), 1);
-        });
-    }
     static getPermission(level: keyof typeof CommandPermissions): CommandPermission {
         return CommandPermissions[level];
     }

@@ -38,7 +38,7 @@ describe("SpawnBlockPaletteCommand", () => {
         });
     });
 
-    it("requires a dimension and falls back to sender location", () => {
+    it("requires a dimension and falls back to sender location", async () => {
         const spawnSpy = jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({ placed: 1, failed: 0, attempted: 1 });
         SpawnBlockPaletteCommand.register();
 
@@ -50,6 +50,7 @@ describe("SpawnBlockPaletteCommand", () => {
             sourceEntity: { location: { x: 5, y: 6, z: 7 }, dimension: { id: "overworld" }, nameTag: "Tester" },
         };
         const response = commandHandler?.(senderCtx);
+        await Promise.resolve();
         expect(spawnSpy).toHaveBeenCalledWith({
             dimensionId: "overworld",
             origin: { x: 5, y: 6, z: 7 },
@@ -58,16 +59,17 @@ describe("SpawnBlockPaletteCommand", () => {
             gridWidth: undefined,
             layerHeight: undefined,
         });
-        expect(response).toEqual({ message: "Spawned 1 blocks", status: 0 });
+        expect(response).toEqual({ message: "Starting block palette generation...", status: 0 });
     });
 
-    it("converts maxBlocks only when positive", () => {
+    it("converts maxBlocks only when positive", async () => {
         const spawnSpy = jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({ placed: 2, failed: 0, attempted: 2 });
         SpawnBlockPaletteCommand.register();
 
         const ctx = { sourceEntity: { location: { x: 0, y: 0, z: 0 }, dimension: { id: "overworld" } } };
 
         commandHandler?.(ctx, "overworld", -5);
+        await Promise.resolve();
         expect(spawnSpy).toHaveBeenLastCalledWith({
             dimensionId: "overworld",
             origin: { x: 0, y: 0, z: 0 },
@@ -78,6 +80,7 @@ describe("SpawnBlockPaletteCommand", () => {
         });
 
         commandHandler?.(ctx, "overworld", 12);
+        await Promise.resolve();
         expect(spawnSpy).toHaveBeenLastCalledWith({
             dimensionId: "overworld",
             origin: { x: 0, y: 0, z: 0 },
@@ -88,13 +91,22 @@ describe("SpawnBlockPaletteCommand", () => {
         });
     });
 
-    it("returns failure messaging when spawns fail", () => {
-        jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({ placed: 3, failed: 2, attempted: 5 });
+    it("returns failure messaging when spawns fail", async () => {
+        const spawnSpy = jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({ placed: 3, failed: 2, attempted: 5 });
         SpawnBlockPaletteCommand.register();
 
         const ctx = { sourceEntity: { location: { x: 1, y: 1, z: 1 }, dimension: { id: "nether" } } };
         const result = commandHandler?.(ctx, "nether", 5, 2, 2, 3, { x: 1, y: 2, z: 3 });
 
-        expect(result).toEqual({ message: "Spawned 3/5 blocks with 2 failures", status: 1 });
+        expect(result).toEqual({ message: "Starting block palette generation...", status: 0 });
+        await Promise.resolve();
+        expect(spawnSpy).toHaveBeenCalledWith({
+            dimensionId: "nether",
+            origin: { x: 1, y: 2, z: 3 },
+            maxBlocks: 5,
+            spacing: 2,
+            gridWidth: 2,
+            layerHeight: 3,
+        });
     });
 });

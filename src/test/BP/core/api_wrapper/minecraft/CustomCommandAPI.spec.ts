@@ -2,6 +2,7 @@ import { CustomCommandAPI, CommandSenderSnapshot } from "../../../../../main/BP/
 
 jest.mock("@minecraft/server", () => {
     const startupSubscribe = jest.fn();
+    const runTimeout = jest.fn();
     (globalThis as any).__mcServer = { startupSubscribe };
     return {
         system: {
@@ -10,6 +11,7 @@ jest.mock("@minecraft/server", () => {
                     subscribe: startupSubscribe,
                 },
             },
+            runTimeout,
         },
         CommandPermissionLevel: { Admin: "admin" },
         CustomCommandParamType: {
