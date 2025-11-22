@@ -18,7 +18,7 @@ Hỗ trợ triển khai task cho dự án **CubeGuard** theo đúng workflow chu
    - Chạy `npm run build`
    - Chạy `npm test`
    - Xuất summary rõ ràng
-
+6. Quan trọng nhất, khi phản hồi với user, chỉ được sử dụng tiếng Việt, không được dùng ngôn ngữ khác.
 
 ---
 
