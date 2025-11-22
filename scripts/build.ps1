@@ -90,6 +90,26 @@ function Invoke-PostBuild() {
             }
         }
     }
+
+    Write-Host "`n--- [Packaging] Preparing .mcaddon archive ---" -ForegroundColor Magenta
+    if (-not (Test-Path $buildDir)) {
+        New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
+    }
+
+    $packFolders = Get-ChildItem -Path $buildDir -Directory
+    if ($packFolders.Count -eq 0) {
+        Write-Host "No pack folders found in '$buildDir'. Skipping packaging." -ForegroundColor Yellow
+        exit 1
+    }
+
+    foreach ($packFolder in $packFolders) {
+        $archiveName = $packFolder.Name + ".mcaddon"
+        $archivePath = Join-Path $buildDir $archiveName
+        Remove-Item -Force $archivePath
+
+        Compress-Archive -Path "$packFolder/*" -DestinationPath $archivePath -Force
+        Write-Host "✅ Packaged addon created at: $(Resolve-Path $archivePath)" -ForegroundColor Green
+    }
 }
 
 # --- Main Execution ---
