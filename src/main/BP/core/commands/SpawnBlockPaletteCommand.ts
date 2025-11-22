@@ -1,6 +1,5 @@
 import { CustomCommandAPI } from "../api_wrapper/minecraft/CustomCommandAPI";
 import { BlockPaletteSpawner } from "../api_wrapper/minecraft/BlockPaletteSpawner";
-
 export class SpawnBlockPaletteCommand {
     static register() {
         CustomCommandAPI.registerCommand(
@@ -29,23 +28,26 @@ export class SpawnBlockPaletteCommand {
 
                 const parsedMaxBlocks = typeof maxBlocksArg === "number" && maxBlocksArg > 0 ? Math.floor(maxBlocksArg) : undefined;
 
-                const result = BlockPaletteSpawner.spawn({
-                    dimensionId,
-                    origin: origin ?? { x: 0, y: 0, z: 0 },
-                    maxBlocks: parsedMaxBlocks,
-                    spacing: spacingArg,
-                    gridWidth: gridWidthArg,
-                    layerHeight: layerHeightArg,
+                CustomCommandAPI.nextTick().then(() => {
+                    const result = BlockPaletteSpawner.spawn({
+                        dimensionId,
+                        origin: origin ?? { x: 0, y: 0, z: 0 },
+                        maxBlocks: parsedMaxBlocks,
+                        spacing: spacingArg,
+                        gridWidth: gridWidthArg,
+                        layerHeight: layerHeightArg,
+                    });
+
+                    console.warn(
+                        `[SpawnBlockPalette] Spawned ${result.placed}/${result.attempted} blocks (failed=${result.failed})`
+                    );
                 });
 
-                if (result.failed > 0) {
-                    return {
-                        message: `Spawned ${result.placed}/${result.attempted} blocks with ${result.failed} failures`,
-                        status: 1,
-                    };
-                }
-
-                return { message: `Spawned ${result.placed} blocks`, status: 0 };
+                // Callback phải return ngay
+                return {
+                    message: "Starting block palette generation...",
+                    status: 0,
+                };
             }
         );
     }
