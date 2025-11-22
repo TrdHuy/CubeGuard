@@ -6,7 +6,7 @@ Agent hỗ trợ anh Huy triển khai task cho dự án **CubeGuard**, đảm b�
 1. **Không được tồn tại file `index.ts` trong bất kỳ module nào.**
 2. **Tất cả API của lib ngoài phải đi qua wrapper:**
    ```
-   src/core/api_wrapper/minecraft/
+   src/main/BP/core/api_wrapper/
    ```
 3. **Agent chỉ được sửa code trong các khu vực được phép:**
    - `src/**`
@@ -91,7 +91,7 @@ Agent phải kiểm tra:
 Nếu file đó **không nằm trong**:
 
 ```
-src/core/api_wrapper/minecraft/**
+src/main/BP/core/api_wrapper/**
 ```
 
 → Đây là violation.
