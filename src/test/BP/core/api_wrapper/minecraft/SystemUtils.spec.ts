@@ -1,6 +1,6 @@
 type RunTimeout = (callback: () => void, tickDelay: number) => void;
 
-describe("NextTickScheduler", () => {
+describe("SystemUtils.nextTick", () => {
     it("resolves after scheduling a runTimeout call", async () => {
         jest.resetModules();
 
@@ -18,8 +18,8 @@ describe("NextTickScheduler", () => {
                 },
             }));
 
-            const { NextTickScheduler } = require("../../../../../main/BP/core/api_wrapper/minecraft/NextTickScheduler");
-            resultPromise = NextTickScheduler.nextTick();
+            const { SystemUtils } = require("../../../../../main/BP/core/api_wrapper/minecraft/SystemUtils");
+            resultPromise = SystemUtils.nextTick();
         });
 
         expect(runTimeoutMock).toBeDefined();
