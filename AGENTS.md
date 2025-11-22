@@ -8,12 +8,17 @@ Hỗ trợ triển khai task cho dự án **CubeGuard** theo đúng workflow chu
    ```
    src/main/BP/core/api_wrapper/
    ```
-3. **Agent chỉ được phép sửa code trong thư mục `src/**`**  
-   → *Tuyệt đối không sửa hoặc ghi file trong `BP/`, `RP/` hoặc thư mục pack.*
-4. Sau khi chỉnh code, agent phải:
+3. **Agent chỉ được phép sửa code trong các khu vực cho phép:**
+   - `src/**`  *(toàn quyền sửa khi cần)*
+   - `.github/**` *(được sửa nhẹ)* trừ khi có yêu cầu thay đổi trực tiếp từ người dùng, nếu muốn thay đổi nhiều phải xin phép người dùng
+   - `scripts/**` *(được sửa nhẹ)* trừ khi có yêu cầu thay đổi trực tiếp từ người dùng, nếu muốn thay đổi nhiều phải xin phép người dùng
+4. **Agent tuyệt đối không được sửa hoặc ghi file trong thư mục pack:**
+   - `BP/`, `RP/`, `SP/`, `WT/`
+5. Sau khi chỉnh code xong, agent phải:
    - Chạy `npm run build`
    - Chạy `npm test`
    - Xuất summary rõ ràng
+
 
 ---
 
@@ -39,19 +44,43 @@ Hỗ trợ triển khai task cho dự án **CubeGuard** theo đúng workflow chu
 
 ---
 
-### **Rule 2 — Chỉ được sửa code trong thư mục `src/**`**
-- Agent **không được ghi / chỉnh / xoá** file trong:
-  - `BP/`
-  - `RP/`
-  - `SP/`
-  - `WT/`
-  - bất kỳ file JSON của pack
-  - thư mục asset (textures, models)
-- Nếu tác vụ yêu cầu sửa file nằm ngoài `src/`:
-  → Agent từ chối và hỏi lại người dùng  
-  → “File nằm ngoài vùng code được phép chỉnh sửa (src/**). Có muốn tiếp tục không?”
+### **Rule 2 — Allowed modification zones**
+Agent chỉ được phép sửa code trong những vùng sau:
 
-Đây là **hard rule**, để bảo vệ pack khỏi bị agent chỉnh nhầm.
+#### **✔ Toàn quyền sửa**
+```
+src/**
+```
+
+#### **✔ Sửa nhẹ, hạn chế thay đổi lớn**
+```
+.github/**
+scripts/**
+```
+Giới hạn sửa nhẹ bao gồm:
+- cập nhật chuỗi cấu hình
+- chỉnh sửa một vài dòng nhỏ (fix path, sửa env, update workflow step)
+- không được xoá file
+- không được rewrite toàn bộ file
+- không tạo file mới trừ khi user yêu cầu
+- Khi có yêu cầu đặc biệt từ người dùng thì có thể sửa nhiều, hoặc nếu agent cần sửa nhiều hoặc tạo mới, phải hỏi lại ý kiến của người dùng.
+
+#### **❌ Tuyệt đối không được sửa**
+```
+BP/**
+RP/**
+SP/**
+WT/**
+```
+- Không được ghi / xoá / chỉnh bất kỳ file nào trong pack của Minecraft.
+
+Nếu có tác vụ yêu cầu chỉnh file ngoài vùng cho phép:
+→ Agent phải hỏi lại user:
+```
+⚠ File nằm ngoài vùng được phép chỉnh sửa. Anh có muốn continue không?
+```
+
+---
 
 ---
 
