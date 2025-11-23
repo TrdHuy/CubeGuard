@@ -15,7 +15,7 @@ console.log("[Main] Begin the script: v0.0.1");
 world.afterEvents.playerBreakBlock.subscribe((event: PlayerBreakBlockAfterEvent) => {
     const { player, block, dimension } = event;
     const playerName = player.name;
-    const blockType = block.typeId;
+    const blockType = event.brokenBlockPermutation.type.id;
     const location = block.location;
     const dimensionId = dimension.id;
 
