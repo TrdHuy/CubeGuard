@@ -2,7 +2,8 @@ import { world, PlayerBreakBlockAfterEvent } from "@minecraft/server";
 import { createBlockBreakBroadcastMessage, createBlockBreakDebugMessage } from "./blockBreakHandler.js";
 import { EntityControllerSystem } from "./core/entity_controller.js";
 import { PandaCreeperController } from "./mobs/panda_creeper_controller.js";
-import { SpawnBlockPaletteCommand } from "./core/commands/SpawnBlockPaletteCommand.js"
+import { SpawnBlockPaletteCommand } from "./core/commands/SpawnBlockPaletteCommand.js";
+import { ExportBlockPaletteCommand } from "./core/commands/ExportBlockPaletteCommand.js";
 console.log("[Main] Begin the script: v0.0.1");
 
 
@@ -14,7 +15,7 @@ console.log("[Main] Begin the script: v0.0.1");
 world.afterEvents.playerBreakBlock.subscribe((event: PlayerBreakBlockAfterEvent) => {
     const { player, block, dimension } = event;
     const playerName = player.name;
-    const blockType = block.typeId;
+    const blockType = event.brokenBlockPermutation.type.id;
     const location = block.location;
     const dimensionId = dimension.id;
 
@@ -71,4 +72,5 @@ if (!world.ecs) {
         console.log("[Main] Entity Controller System initialized successfully.");
     });
     SpawnBlockPaletteCommand.register();
+    ExportBlockPaletteCommand.register();
 }
