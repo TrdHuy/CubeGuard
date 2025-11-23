@@ -1,4 +1,4 @@
-import { BlockPaletteSpawner } from "../../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteSpawner";
+import { BlockPaletteSpawner } from "../../../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteSpawner";
 
 jest.mock("@minecraft/server", () => {
     const startupSubscribe = jest.fn();

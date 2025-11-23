@@ -1,4 +1,4 @@
-import { BlockPaletteExporter } from "../../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteExporter";
+import { BlockPaletteExporter } from "../../../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteExporter";
 
 jest.mock("@minecraft/server", () => {
     const getDimension = jest.fn();
