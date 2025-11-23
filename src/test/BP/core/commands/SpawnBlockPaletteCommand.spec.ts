@@ -1,5 +1,5 @@
 import { SpawnBlockPaletteCommand } from "../../../../main/BP/core/commands/SpawnBlockPaletteCommand";
-import { BlockPaletteSpawner } from "../../../../main/BP/core/api_wrapper/minecraft/BlockPaletteSpawner";
+import { BlockPaletteSpawner } from "../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteSpawner";
 
 jest.mock("@minecraft/server", () => {
     const startupSubscribe = jest.fn();
@@ -39,7 +39,9 @@ describe("SpawnBlockPaletteCommand", () => {
     });
 
     it("requires a dimension and falls back to sender location", async () => {
-        const spawnSpy = jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({ placed: 1, failed: 0, attempted: 1 });
+        const spawnSpy = jest
+            .spyOn(BlockPaletteSpawner, "spawn")
+            .mockReturnValue({ placed: 1, failed: 0, attempted: 1, bounds: { min: { x: 0, y: 0, z: 0 }, max: { x: 0, y: 0, z: 0 } } });
         SpawnBlockPaletteCommand.register();
 
         expect(commandHandler).toBeDefined();
@@ -63,7 +65,9 @@ describe("SpawnBlockPaletteCommand", () => {
     });
 
     it("converts maxBlocks only when positive", async () => {
-        const spawnSpy = jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({ placed: 2, failed: 0, attempted: 2 });
+        const spawnSpy = jest
+            .spyOn(BlockPaletteSpawner, "spawn")
+            .mockReturnValue({ placed: 2, failed: 0, attempted: 2, bounds: { min: { x: 0, y: 0, z: 0 }, max: { x: 0, y: 0, z: 0 } } });
         SpawnBlockPaletteCommand.register();
 
         const ctx = { sourceEntity: { location: { x: 0, y: 0, z: 0 }, dimension: { id: "overworld" } } };
@@ -92,7 +96,12 @@ describe("SpawnBlockPaletteCommand", () => {
     });
 
     it("returns failure messaging when spawns fail", async () => {
-        const spawnSpy = jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({ placed: 3, failed: 2, attempted: 5 });
+        const spawnSpy = jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({
+            placed: 3,
+            failed: 2,
+            attempted: 5,
+            bounds: { min: { x: 0, y: 0, z: 0 }, max: { x: 0, y: 0, z: 0 } },
+        });
         SpawnBlockPaletteCommand.register();
 
         const ctx = { sourceEntity: { location: { x: 1, y: 1, z: 1 }, dimension: { id: "nether" } } };
