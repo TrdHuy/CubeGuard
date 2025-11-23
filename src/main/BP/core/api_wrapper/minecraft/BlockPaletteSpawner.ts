@@ -45,6 +45,7 @@ export class BlockPaletteSpawner {
                     failed++;
                 }
             } catch (error) {
+                console.error("[SpawnBlocks] Error while setting block:", error);
                 failed++;
             }
         }
