@@ -4,7 +4,7 @@
 Hỗ trợ triển khai task cho dự án **CubeGuard** theo đúng workflow chuẩn, đảm bảo:
 
 1. **Không module nào chứa file `index.ts`.**
-2. **Tất cả API từ lib ngoài phải thông qua wrapper:**  
+2. **Tất cả API từ lib ngoài phải thông qua wrapper:**
    ```
    src/main/BP/core/api_wrapper/
    ```
@@ -14,21 +14,24 @@ Hỗ trợ triển khai task cho dự án **CubeGuard** theo đúng workflow chu
    - `scripts/**` *(được sửa nhẹ)* trừ khi có yêu cầu thay đổi trực tiếp từ người dùng, nếu muốn thay đổi nhiều phải xin phép người dùng
 4. **Agent tuyệt đối không được sửa hoặc ghi file trong thư mục pack:**
    - `BP/`, `RP/`, `SP/`, `WT/`
-5. Sau khi chỉnh code xong, agent phải:
-   - Chạy `npm run build`
-   - Chạy `npm test`
-   - Xuất summary rõ ràng
-6. Quan trọng nhất, khi phản hồi với user, chỉ được sử dụng tiếng Việt, không được dùng ngôn ngữ khác.
+5. Trước khi chạy `npm run build` hoặc `npm test`, agent phải:
+   - kiểm tra **dependencies** có đầy đủ hay không
+   - chạy `npm install` hoặc `npm ci` nếu cần (sau khi hỏi người dùng)
+6. Sau khi chỉnh code xong, agent phải:
+   - chạy `npm run build`
+   - chạy `npm test`
+   - xuất summary rõ ràng
+7. **Mọi phản hồi với người dùng bắt buộc dùng tiếng Việt.**
 
 ---
 
 ## 🧠 Capabilities Required
-- Quét cấu trúc file
-- Phân tích code (import, rule violations)
-- Hạn chế vùng được phép ghi file
-- Xoá file hợp lệ
-- Chạy shell (`npm run build`, `npm test`)
-- Sinh summary
+- Quét cấu trúc file & detect rule violations  
+- Giới hạn vùng ghi file  
+- Xoá file hợp lệ  
+- Phân tích import (wrapper rule)  
+- Chạy shell (`npm install`, `npm ci`, `npm run build`, `npm test`)  
+- Sinh summary chi tiết  
 
 ---
 
@@ -36,51 +39,46 @@ Hỗ trợ triển khai task cho dự án **CubeGuard** theo đúng workflow chu
 
 ### **Rule 1 — Không được tồn tại file `index.ts` trong bất kỳ module nào**
 - Quét: `src/**/index.ts`
-- Nếu có:
-  - Cảnh báo
-  - Hỏi người dùng có muốn xoá không
-  - Nếu Yes → xoá  
-  - Nếu No → đánh dấu lỗi cuối workflow
+- Nếu phát hiện:
+  - cảnh báo
+  - hỏi người dùng có muốn xoá không
+  - nếu Yes → xoá
+  - nếu No → đánh dấu lỗi cuối workflow
 
 ---
 
-### **Rule 2 — Allowed modification zones**
-Agent chỉ được phép sửa code trong những vùng sau:
+### **Rule 2 — Allowed Modification Zones**
+Agent chỉ được phép sửa code trong các khu vực sau:
 
-#### **✔ Toàn quyền sửa**
+#### ✔ **Toàn quyền sửa**
 ```
 src/**
 ```
 
-#### **✔ Sửa nhẹ, hạn chế thay đổi lớn**
+#### ✔ **Sửa nhẹ / hạn chế thay đổi lớn**
 ```
 .github/**
 scripts/**
 ```
-Giới hạn sửa nhẹ bao gồm:
-- cập nhật chuỗi cấu hình
-- chỉnh sửa một vài dòng nhỏ (fix path, sửa env, update workflow step)
-- không được xoá file
-- không được rewrite toàn bộ file
+Giới hạn sửa nhẹ:
+- chỉnh 1 vài dòng nhỏ (env, path, step)
+- không xoá file
+- không rewrite toàn bộ file
 - không tạo file mới trừ khi user yêu cầu
-- Khi có yêu cầu đặc biệt từ người dùng thì có thể sửa nhiều, hoặc nếu agent cần sửa nhiều hoặc tạo mới, phải hỏi lại ý kiến của người dùng.
+- nếu cần sửa nhiều hoặc thay đổi lớn:  
+  → **phải hỏi ý kiến người dùng**
 
-#### **❌ Tuyệt đối không được sửa**
+#### ❌ **Tuyệt đối không được sửa**
 ```
 BP/**
 RP/**
 SP/**
 WT/**
 ```
-- Không được ghi / xoá / chỉnh bất kỳ file nào trong pack của Minecraft.
-
-Nếu có tác vụ yêu cầu chỉnh file ngoài vùng cho phép:
-→ Agent phải hỏi lại user:
+Nếu agent cố sửa:
 ```
-⚠ File nằm ngoài vùng được phép chỉnh sửa. Anh có muốn continue không?
+⚠ Blocked: File nằm ngoài vùng được phép chỉnh sửa (src/, .github/, scripts/).
 ```
-
----
 
 ---
 
@@ -99,7 +97,41 @@ Nếu có tác vụ yêu cầu chỉnh file ngoài vùng cho phép:
 
 ---
 
-### **Rule 4 — Build sau khi code sửa**
+### **Rule 4A — Dependency Check (Quan trọng)**
+Trước khi Build/Test, agent phải thực hiện:
+
+1. **Kiểm tra node_modules**
+   - nếu không có → hỏi người dùng:
+     ```
+     Thư mục node_modules không tồn tại. Anh có muốn chạy "npm install" không?
+     ```
+
+2. **Kiểm tra dependency lỗi**
+   - chạy:
+     ```
+     npm ls --all --depth=0
+     ```
+   - nếu báo thiếu package:
+     → list dependency lỗi  
+     → hỏi user có muốn cài không
+
+3. **Kiểm tra mismatch lockfile**
+   - nếu `package-lock.json` thay đổi nhiều
+   - hỏi user có muốn dùng:
+     ```
+     npm ci
+     ```
+
+4. Nếu user từ chối cài dependencies:
+   - agent cảnh báo nhưng vẫn chạy build/test
+   - summary ghi rõ:
+     ```
+     ⚠ Build/Test chạy trong trạng thái thiếu dependencies.
+     ```
+
+---
+
+### **Rule 5 — Build dự án**
 Chạy:
 ```
 npm run build
@@ -108,7 +140,7 @@ Nếu lỗi → dừng và báo chi tiết.
 
 ---
 
-### **Rule 5 — Test toàn bộ dự án**
+### **Rule 6 — Test dự án**
 Chạy:
 ```
 npm test --silent
@@ -117,22 +149,28 @@ Nếu lỗi → dừng và báo chi tiết.
 
 ---
 
-### **Rule 6 — Summary**
-Hiển thị:
-- index.ts đã xoá (nếu có)
-- file API import sai wrapper
+### **Rule 7 — Summary**
+Báo cáo cuối cùng phải bao gồm:
+
+- danh sách index.ts bị xoá (nếu có)
+- danh sách import sai wrapper
 - import đã được autofix (nếu có)
-- build pass/fail
-- test pass/fail
-- cảnh báo nếu có file ngoài `src/` bị yêu cầu chỉnh sửa
+- danh sách file được sửa:  
+  - trong `src/**`  
+  - trong `.github/**` (đánh dấu “sửa nhẹ”)  
+  - trong `scripts/**` (đánh dấu “sửa nhẹ”)  
+- build: pass/fail  
+- test: pass/fail  
+- cảnh báo nếu user từ chối cài dependencies  
+- cảnh báo nếu user yêu cầu sửa file ngoài allowed zones
 
 ---
 
-## 🛠 Workflow
+## 🛠 Workflow (Full)
 
 ### **Step 1 — Scan forbidden index.ts**
 - Quét `src/**/index.ts`
-- Log danh sách
+- Hiển thị danh sách
 - Hỏi user có muốn xoá không
 
 ---
@@ -162,43 +200,43 @@ Nếu user bật autofix:
 
 ---
 
-### **Step 4 — Build**
+### **Step 4A — Dependency Check**
+- Kiểm tra node_modules
+- Kiểm tra dependency missing
+- Kiểm tra peer dependency conflict
+- Kiểm tra lockfile
+- Hỏi user trước khi chạy `npm install` or `npm ci`
+
+---
+
+### **Step 5 — Build**
 ```
 npm run build
 ```
 
 ---
 
-### **Step 5 — Test**
+### **Step 6 — Test**
 ```
 npm test --silent
 ```
 
 ---
 
-### **Step 6 — Final Summary**
-Ví dụ output:
+### **Step 7 — Final Summary**
+Ví dụ:
 
 ```
-✔ No illegal index.ts
-✔ All external API imports routed through wrapper
-✔ No forbidden modifications detected in BP/RP
-✔ Build success
-✔ Test success
-✨ Task completed successfully
-```
-
-Hoặc:
-
-```
-⚠ Found 2 forbidden index.ts files
-⚠ 3 files imported external APIs directly
-⚠ Attempted modification blocked outside src/**
-❌ Build failed
-→ Please review issues above.
+✔ Không có index.ts vi phạm
+✔ Tất cả import đã tuân thủ wrapper
+✔ Một số thay đổi nhỏ trong .github/workflows/build.yml
+✔ Dependencies OK
+✔ Build thành công
+✔ Test thành công
+✨ Task hoàn tất!
 ```
 
 ---
 
 ## ✔ Done
-CubeGuard Task Agent updated with stricter “src-only modifications” rule.
+Agent đã được cập nhật đầy đủ với dependency check, vùng sửa hợp lệ, wrapper rule và output tiếng Việt.
