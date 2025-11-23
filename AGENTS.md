@@ -22,7 +22,7 @@ Hỗ trợ triển khai task cho dự án **CubeGuard** theo đúng workflow chu
    - chạy `npm test`
    - xuất summary rõ ràng
 7. **Mọi phản hồi với người dùng bắt buộc dùng tiếng Việt.**
-
+8. **Tích hợp Strict Module Design v4 khi sinh code module mới**, với phiên bản mẫu TypeScript chuẩn hóa bên dưới.
 ---
 
 ## 🧠 Capabilities Required
@@ -163,6 +163,95 @@ Báo cáo cuối cùng phải bao gồm:
 - test: pass/fail  
 - cảnh báo nếu user từ chối cài dependencies  
 - cảnh báo nếu user yêu cầu sửa file ngoài allowed zones
+
+# 🚀 **Rule 8 — Strict Module Design v4 (TypeScript Version)**  
+
+Khi user yêu cầu **tạo module mới**, agent **bắt buộc** sinh code theo chuẩn:
+
+---
+
+## ✔ Yêu cầu chung
+- Public API: chỉ dùng `export function`, rõ ràng, sạch.  
+- Internal API: dùng `private` *hoặc* hàm internal không export.  
+- Không expose dư thừa.  
+- Tất cả hàm chỉ nhận **primitive parameters**.  
+- Không dùng object phức tạp, không shared state.  
+- Mỗi logic chia nhỏ thành nhiều hàm nhỏ để test độc lập.  
+- Module phải test được ngay.  
+
+---
+
+## ✔ STRICT CODE TEMPLATE (TypeScript — FINAL)
+
+```ts
+// ============================================================================
+// 📌 Module Name: SampleModule
+// 🎯 Purpose    : Demo chuẩn module TypeScript
+// 🧩 Description: Mẫu chuẩn hóa structure & style Strict Module Design v4
+// 🔗 Dependencies: (none)
+//
+// 🏷 Public APIs:
+//   - add(a: number, b: number) → number
+//
+// 🔒 Internal Logic (dùng primitive parameters & private methods):
+//   - validateNumber(n: number)
+//
+// 🧪 Testability:
+//   - Test file: SampleModule.test.ts
+//   - Test tất cả Public API theo Arrange → Act → Assert
+//
+// ✍️ Author  : AI-Generated Using Standard Prompt
+// 📅 Created : 2025-10-25
+// ♻️ Updated : 2025-10-25
+// ============================================================================
+
+
+// ====================== PUBLIC API IMPLEMENTATION ==========================
+
+export function add(a: number, b: number): number {
+    validateNumber(a);
+    validateNumber(b);
+    return a + b;
+}
+
+
+// ====================== INTERNAL IMPLEMENTATION ===========================
+
+// Internal hàm bắt buộc dùng private để đảm bảo đóng gói module.
+// Trong TS module (không class), private = không export.
+// (Agent tuyệt đối không export internal API)
+function validateNumber(n: number): void {
+    if (typeof n !== "number") {
+        throw new Error("Input must be a number");
+    }
+}
+
+
+// ====================== EXPORT MODULES ====================================
+
+export default { add };
+```
+
+---
+
+## ✔ STRICT TEST TEMPLATE (TypeScript — FINAL)
+
+```ts
+// Test Name: SampleModule.test.ts
+import { add } from "./SampleModule";
+
+test("add should return correct sum", () => {
+    // Arrange
+    const a = 2;
+    const b = 3;
+
+    // Act
+    const result = add(a, b);
+
+    // Assert
+    expect(result).toBe(5);
+});
+```
 
 ---
 
