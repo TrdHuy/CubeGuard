@@ -1,4 +1,4 @@
-import { BlockPaletteExporter } from "../api_wrapper/minecraft/BlockPaletteExporter";
+import { BlockPaletteExporter } from "../api_wrapper/minecraft/block_palette/BlockPaletteExporter";
 import { CustomCommandAPI } from "../api_wrapper/minecraft/CustomCommandAPI";
 
 type Vector3 = { x: number; y: number; z: number };
@@ -8,57 +8,38 @@ export class ExportBlockPaletteCommand {
         CustomCommandAPI.registerCommand(
             {
                 name: "creator:exportblockpalette",
-                description: "Export block data within a bounding box as JSON",
+                description: "Export block palette data as JSON using shared layout parameters",
                 permission: CustomCommandAPI.getPermission("Admin"),
                 mandatoryParameters: [{ name: "dimensionId", type: CustomCommandAPI.getParameterType("String") }],
                 optionalParameters: [
                     { name: "origin", type: CustomCommandAPI.getParameterType("Location") },
-                    { name: "width", type: CustomCommandAPI.getParameterType("Integer") },
-                    { name: "height", type: CustomCommandAPI.getParameterType("Integer") },
-                    { name: "depth", type: CustomCommandAPI.getParameterType("Integer") },
-                    { name: "min", type: CustomCommandAPI.getParameterType("Location") },
-                    { name: "max", type: CustomCommandAPI.getParameterType("Location") },
+                    { name: "maxBlocks", type: CustomCommandAPI.getParameterType("Integer") },
+                    { name: "spacing", type: CustomCommandAPI.getParameterType("Float") },
+                    { name: "gridWidth", type: CustomCommandAPI.getParameterType("Integer") },
+                    { name: "layerHeight", type: CustomCommandAPI.getParameterType("Integer") },
                 ],
             },
             ({ sender, args }) => {
-                const [dimensionArg, originArg, widthArg, heightArg, depthArg, minArg, maxArg] = args ?? [];
+                const [dimensionArg, originArg, maxBlocksArg, spacingArg, gridWidthArg, layerHeightArg] = args ?? [];
 
                 const dimensionId = dimensionArg || (sender.type !== "unknown" ? (sender as any).dimensionId : undefined);
                 const origin = (originArg as Vector3 | undefined) ?? (sender.type !== "unknown" ? (sender as any).location : undefined);
-                const min = minArg as Vector3 | undefined;
-                const max = maxArg as Vector3 | undefined;
 
                 if (!dimensionId) {
                     return { message: "Failed: No dimension provided", status: 1 };
                 }
 
-                const normalizedSize = {
-                    width: typeof widthArg === "number" ? Math.floor(widthArg) : undefined,
-                    height: typeof heightArg === "number" ? Math.floor(heightArg) : undefined,
-                    depth: typeof depthArg === "number" ? Math.floor(depthArg) : undefined,
-                };
-
-                const sizeIsComplete =
-                    normalizedSize.width !== undefined &&
-                    normalizedSize.height !== undefined &&
-                    normalizedSize.depth !== undefined;
-
-                if (!origin && !min && !max) {
-                    return { message: "Failed: Provide origin or min/max bounding box", status: 1 };
+                if (!origin) {
+                    return { message: "Failed: Provide origin", status: 1 };
                 }
 
                 const result = BlockPaletteExporter.export({
                     dimensionId,
                     origin,
-                    size: sizeIsComplete
-                        ? {
-                              width: normalizedSize.width as number,
-                              height: normalizedSize.height as number,
-                              depth: normalizedSize.depth as number,
-                          }
-                        : undefined,
-                    min,
-                    max,
+                    maxBlocks: typeof maxBlocksArg === "number" && maxBlocksArg > 0 ? Math.floor(maxBlocksArg) : undefined,
+                    spacing: typeof spacingArg === "number" ? spacingArg : undefined,
+                    gridWidth: typeof gridWidthArg === "number" ? Math.floor(gridWidthArg) : undefined,
+                    layerHeight: typeof layerHeightArg === "number" ? Math.floor(layerHeightArg) : undefined,
                 });
 
                 if (!result.success) {

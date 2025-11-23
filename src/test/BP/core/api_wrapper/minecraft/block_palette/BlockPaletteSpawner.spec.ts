@@ -1,4 +1,4 @@
-import { BlockPaletteSpawner } from "../../../../../main/BP/core/api_wrapper/minecraft/BlockPaletteSpawner";
+import { BlockPaletteSpawner } from "../../../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteSpawner";
 
 jest.mock("@minecraft/server", () => {
     const startupSubscribe = jest.fn();
@@ -46,7 +46,12 @@ describe("BlockPaletteSpawner", () => {
             layerHeight: 5,
         });
 
-        expect(result).toEqual({ placed: 10, failed: 0, attempted: 10 });
+        expect(result).toEqual({
+            placed: 10,
+            failed: 0,
+            attempted: 10,
+            bounds: { min: { x: 0, y: 10, z: 0 }, max: { x: 4, y: 15, z: 4 } },
+        });
 
         // First row (y=10)
         expect(placedBlocks[0]).toEqual({ x: 0, y: 10, z: 0 });
@@ -92,6 +97,11 @@ describe("BlockPaletteSpawner", () => {
 
         expect(getAllBlocks).toHaveBeenCalled();
         expect(mockDimension.getBlock).toHaveBeenCalledTimes(4);
-        expect(result).toEqual({ placed: 2, failed: 2, attempted: 4 });
+        expect(result).toEqual({
+            placed: 2,
+            failed: 2,
+            attempted: 4,
+            bounds: { min: { x: 0, y: 0, z: 0 }, max: { x: 2, y: 0, z: 2 } },
+        });
     });
 });

@@ -1,25 +1,28 @@
-import { BlockPaletteExporter } from "../../../../../main/BP/core/api_wrapper/minecraft/BlockPaletteExporter";
+import { BlockPaletteExporter } from "../../../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteExporter";
 
 jest.mock("@minecraft/server", () => {
     const getDimension = jest.fn();
     const sendMessage = jest.fn();
+    const getAllBlocks = jest.fn(() => []);
     const mockWorld = { getDimension, sendMessage };
-    (globalThis as any).__mcServer = { getDimension, sendMessage };
-    return { world: mockWorld };
+    (globalThis as any).__mcServer = { getDimension, sendMessage, getAllBlocks };
+    return { world: mockWorld, BlockTypes: { getAll: getAllBlocks } };
 });
 
 describe("BlockPaletteExporter", () => {
     beforeEach(() => {
-        const { getDimension, sendMessage } = (globalThis as any).__mcServer;
+        const { getDimension, sendMessage, getAllBlocks } = (globalThis as any).__mcServer;
         getDimension.mockReset();
         sendMessage.mockReset();
+        getAllBlocks.mockReset();
+        getAllBlocks.mockReturnValue([{ id: "minecraft:stone" }]);
         jest.clearAllMocks();
     });
 
-    it("returns failure when bounds are missing or invalid", () => {
+    it("returns failure when the origin is missing", () => {
         const result = BlockPaletteExporter.export({ dimensionId: "overworld" });
 
-        expect(result).toEqual({ success: false, error: "Missing bounding information" });
+        expect(result).toEqual({ success: false, error: "Missing origin" });
     });
 
     it("fails when the dimension is unknown", () => {
@@ -29,7 +32,6 @@ describe("BlockPaletteExporter", () => {
         const result = BlockPaletteExporter.export({
             dimensionId: "custom",
             origin: { x: 0, y: 0, z: 0 },
-            size: { width: 1, height: 1, depth: 1 },
         });
 
         expect(getDimension).toHaveBeenCalledWith("custom");
@@ -45,13 +47,12 @@ describe("BlockPaletteExporter", () => {
         const result = BlockPaletteExporter.export({
             dimensionId: "overworld",
             origin: { x: 0, y: 0, z: 0 },
-            size: { width: 1, height: 1, depth: 1 },
         });
 
         expect(result).toEqual({ success: false, error: "Unknown dimension: overworld" });
     });
 
-    it("collects non-air blocks with properties using normalized bounds", () => {
+    it("collects non-air blocks with properties using the shared palette traversal", () => {
         const placedBlocks = new Map<string, any>();
         placedBlocks.set("1,2,3", {
             typeId: "minecraft:stone",
@@ -68,13 +69,16 @@ describe("BlockPaletteExporter", () => {
         const mockDimension = {
             getBlock: jest.fn((loc: any) => placedBlocks.get(`${loc.x},${loc.y},${loc.z}`)),
         };
-        const { getDimension } = (globalThis as any).__mcServer;
+        const { getDimension, getAllBlocks } = (globalThis as any).__mcServer;
         getDimension.mockReturnValue(mockDimension);
+        getAllBlocks.mockReturnValue(new Array(4).fill(null).map((_, i) => ({ id: `block-${i}` })));
 
         const result = BlockPaletteExporter.export({
             dimensionId: "overworld",
             origin: { x: 1, y: 2, z: 3 },
-            size: { width: 2, height: 1, depth: 2 },
+            maxBlocks: 4,
+            spacing: 1,
+            gridWidth: 2,
         });
 
         expect(result.success).toBe(true);

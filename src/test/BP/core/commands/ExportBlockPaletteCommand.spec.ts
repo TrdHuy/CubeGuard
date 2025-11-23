@@ -1,5 +1,5 @@
 import { ExportBlockPaletteCommand } from "../../../../main/BP/core/commands/ExportBlockPaletteCommand";
-import { BlockPaletteExporter } from "../../../../main/BP/core/api_wrapper/minecraft/BlockPaletteExporter";
+import { BlockPaletteExporter } from "../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteExporter";
 import { CustomCommandAPI } from "../../../../main/BP/core/api_wrapper/minecraft/CustomCommandAPI";
 
 jest.mock("../../../../main/BP/core/api_wrapper/minecraft/CustomCommandAPI", () => {
@@ -15,7 +15,7 @@ jest.mock("../../../../main/BP/core/api_wrapper/minecraft/CustomCommandAPI", () 
     };
 });
 
-jest.mock("../../../../main/BP/core/api_wrapper/minecraft/BlockPaletteExporter", () => {
+jest.mock("../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteExporter", () => {
     return {
         BlockPaletteExporter: {
             export: jest.fn(),
@@ -50,7 +50,10 @@ describe("ExportBlockPaletteCommand", () => {
                 ],
                 optionalParameters: expect.arrayContaining([
                     expect.objectContaining({ name: "origin", type: "Location" }),
-                    expect.objectContaining({ name: "width", type: "Integer" }),
+                    expect.objectContaining({ name: "maxBlocks", type: "Integer" }),
+                    expect.objectContaining({ name: "spacing", type: "Float" }),
+                    expect.objectContaining({ name: "gridWidth", type: "Integer" }),
+                    expect.objectContaining({ name: "layerHeight", type: "Integer" }),
                 ]),
                 permission: "admin",
             }),
@@ -58,14 +61,14 @@ describe("ExportBlockPaletteCommand", () => {
         );
     });
 
-    it("requires bounding information and dimension", () => {
+    it("requires an origin and dimension", () => {
         const handler = getHandler();
 
         const missingDimension = handler?.({ sender: { type: "unknown" }, args: [] });
         expect(missingDimension).toEqual({ message: "Failed: No dimension provided", status: 1 });
 
         const missingBounds = handler?.({ sender: { type: "unknown" }, args: ["overworld"] });
-        expect(missingBounds).toEqual({ message: "Failed: Provide origin or min/max bounding box", status: 1 });
+        expect(missingBounds).toEqual({ message: "Failed: Provide origin", status: 1 });
     });
 
     it("exports and transmits when bounds are valid", () => {
@@ -77,14 +80,18 @@ describe("ExportBlockPaletteCommand", () => {
             blocks: [{ typeId: "minecraft:stone", properties: [], location: { x: 0, y: 0, z: 0 } }],
         });
 
-        const result = handler?.({ sender: { type: "unknown" }, args: ["overworld", { x: 0, y: 0, z: 0 }, 2, 2, 2] });
+        const result = handler?.({
+            sender: { type: "unknown" },
+            args: ["overworld", { x: 0, y: 0, z: 0 }, 2, 1.5, 4, 2],
+        });
 
         expect(exportMock).toHaveBeenCalledWith({
             dimensionId: "overworld",
             origin: { x: 0, y: 0, z: 0 },
-            size: { width: 2, height: 2, depth: 2 },
-            min: undefined,
-            max: undefined,
+            maxBlocks: 2,
+            spacing: 1.5,
+            gridWidth: 4,
+            layerHeight: 2,
         });
         expect(transmitMock).toHaveBeenCalledWith(
             [{ typeId: "minecraft:stone", properties: [], location: { x: 0, y: 0, z: 0 } }],
@@ -100,7 +107,7 @@ describe("ExportBlockPaletteCommand", () => {
 
         const result = handler?.({
             sender: { type: "unknown" },
-            args: ["nether", undefined, undefined, undefined, undefined, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }],
+            args: ["nether", { x: 0, y: 0, z: 0 }],
         });
 
         expect(result).toEqual({ message: "Failed: bad", status: 1 });

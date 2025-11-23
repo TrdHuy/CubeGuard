@@ -1,5 +1,5 @@
 import { CustomCommandAPI } from "../api_wrapper/minecraft/CustomCommandAPI";
-import { BlockPaletteSpawner } from "../api_wrapper/minecraft/BlockPaletteSpawner";
+import { BlockPaletteSpawner } from "../api_wrapper/minecraft/block_palette/BlockPaletteSpawner";
 import { SystemUtils } from "../api_wrapper/minecraft/SystemUtils";
 export class SpawnBlockPaletteCommand {
     static register() {
