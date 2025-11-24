@@ -1,3 +1,11 @@
+/**
+ * Strict Module Design v4 — Block palette export wrapper.
+ *
+ * Lưu ý khi bổ sung wrapper mới:
+ * - PUBLIC API: Chỉ export kiểu dữ liệu và entry point cần dùng ở layer ngoài.
+ * - INTERNAL IMPLEMENTATION: Validate đầu vào, tránh export helper không cần thiết.
+ * - EXPORT MODULES: Cung cấp export default gom nhóm public API.
+ */
 import { BlockTypes, world } from "@minecraft/server";
 import { calculatePaletteBounds, normalizeVector3, paletteCoordinates, resolvePaletteConfig } from "./PaletteLayout";
 import type { BoundingBox, Vector3 } from "./PaletteLayout";
@@ -23,38 +31,20 @@ export type ExportResult =
 
 export class BlockPaletteExporter {
     static export(options: ExportOptions): ExportResult {
-        const origin = normalizeVector3(options.origin);
+        const validation = validateExportOptions(options);
 
-        if (!origin) {
-            return { success: false, error: "Missing origin" };
+        if (!validation.valid) {
+            return { success: false, error: validation.reason };
         }
 
-        let dimension;
-
-        try {
-            dimension = world.getDimension(options.dimensionId);
-        } catch (error) {
-            return { success: false, error: `Unknown dimension: ${options.dimensionId}` };
-        }
-
-        if (!dimension) {
-            return { success: false, error: `Unknown dimension: ${options.dimensionId}` };
-        }
-
+        const { origin, dimension } = validation;
         const blockTypes = BlockTypes.getAll();
         const config = resolvePaletteConfig(options, blockTypes.length);
         const bounds = calculatePaletteBounds(origin, config);
         const blocks: ExportedBlock[] = [];
 
         for (const { location } of paletteCoordinates(origin, config)) {
-            let block;
-
-            try {
-                block = dimension.getBlock(location);
-            } catch (error) {
-                continue;
-            }
-
+            const block = safelyGetBlock(dimension, location);
             if (!block) {
                 continue;
             }
@@ -65,15 +55,7 @@ export class BlockPaletteExporter {
                 continue;
             }
 
-            const permutation: any = block.permutation as any;
-            const rawProperties: any[] =
-                permutation && typeof permutation.getAllProperties === "function"
-                    ? permutation.getAllProperties()
-                    : [];
-            const properties = rawProperties.map((property: any) => ({
-                name: property.name,
-                value: property.value,
-            }));
+            const properties = collectBlockProperties(block);
 
             blocks.push({
                 typeId,
@@ -86,13 +68,7 @@ export class BlockPaletteExporter {
     }
 
     static transmit(blocks: ExportedBlock[], metadata: { dimensionId: string; bounds: BoundingBox }) {
-        const payload = {
-            type: "blockPaletteExport",
-            dimensionId: metadata.dimensionId,
-            bounds: metadata.bounds,
-            blocks,
-        };
-
+        const payload = buildExportPayload(blocks, metadata);
         const serialized = JSON.stringify(payload);
         console.warn(`[BlockPaletteExport] ${serialized}`);
 
@@ -105,3 +81,64 @@ export class BlockPaletteExporter {
         return serialized.length;
     }
 }
+
+// ====================== INTERNAL IMPLEMENTATION ===========================
+
+function validateExportOptions(options: ExportOptions):
+    | { valid: true; origin: Vector3; dimension: ReturnType<typeof world.getDimension> }
+    | { valid: false; reason: string } {
+    const origin = normalizeVector3(options.origin);
+    if (!origin) {
+        return { valid: false, reason: "Missing origin" };
+    }
+
+    if (!options.dimensionId || typeof options.dimensionId !== "string") {
+        return { valid: false, reason: "dimensionId is required" };
+    }
+
+    try {
+        const dimension = world.getDimension(options.dimensionId);
+        if (!dimension) {
+            return { valid: false, reason: `Unknown dimension: ${options.dimensionId}` };
+        }
+
+        return { valid: true, origin, dimension };
+    } catch (error) {
+        return { valid: false, reason: `Unknown dimension: ${options.dimensionId}` };
+    }
+}
+
+function safelyGetBlock(
+    dimension: ReturnType<typeof world.getDimension>,
+    location: Vector3
+): ReturnType<ReturnType<typeof world.getDimension>["getBlock"]> | undefined {
+    try {
+        return dimension.getBlock(location);
+    } catch (error) {
+        return undefined;
+    }
+}
+
+function collectBlockProperties(block: any): { name: string; value: boolean | number | string }[] {
+    const permutation: any = block.permutation as any;
+    const rawProperties: any[] =
+        permutation && typeof permutation.getAllProperties === "function" ? permutation.getAllProperties() : [];
+
+    return rawProperties.map((property: any) => ({
+        name: property.name,
+        value: property.value,
+    }));
+}
+
+function buildExportPayload(blocks: ExportedBlock[], metadata: { dimensionId: string; bounds: BoundingBox }) {
+    return {
+        type: "blockPaletteExport",
+        dimensionId: metadata.dimensionId,
+        bounds: metadata.bounds,
+        blocks,
+    };
+}
+
+// ====================== EXPORT MODULES ====================================
+
+export default { BlockPaletteExporter };

@@ -1,3 +1,13 @@
+/**
+ * Strict Module Design v4 — Palette layout utilities.
+ *
+ * PUBLIC API: Các kiểu, hằng và hàm export bên dưới dùng cho block palette wrappers.
+ * INTERNAL IMPLEMENTATION: Không export helper thừa; tuân thủ validate đầu vào.
+ * EXPORT MODULES: N/A (module này chỉ cần export named).
+ */
+
+// ====================== PUBLIC API ========================================
+
 export type Vector3 = { x: number; y: number; z: number };
 
 export type BoundingBox = { min: Vector3; max: Vector3 };
