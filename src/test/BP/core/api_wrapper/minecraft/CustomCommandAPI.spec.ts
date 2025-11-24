@@ -1,4 +1,5 @@
-import { CustomCommandAPI, CommandSenderSnapshot } from "../../../../../main/BP/core/api_wrapper/minecraft/CustomCommandAPI";
+import { CustomCommandAPI } from "../../../../../main/BP/core/api_wrapper/minecraft/custom_command/CustomCommandAPI";
+import type { CommandSenderSnapshot } from "../../../../../main/BP/core/api_wrapper/minecraft/custom_command/custom_command.types";
 
 jest.mock("@minecraft/server", () => {
     const startupSubscribe = jest.fn();
