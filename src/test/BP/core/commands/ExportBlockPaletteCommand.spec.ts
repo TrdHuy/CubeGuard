@@ -1,8 +1,8 @@
 import { ExportBlockPaletteCommand } from "../../../../main/BP/core/commands/ExportBlockPaletteCommand";
 import { BlockPaletteExporter } from "../../../../main/BP/core/api_wrapper/minecraft/block_palette/BlockPaletteExporter";
-import { CustomCommandAPI } from "../../../../main/BP/core/api_wrapper/minecraft/CustomCommandAPI";
+import { CustomCommandAPI } from "../../../../main/BP/core/api_wrapper/minecraft/custom_command/CustomCommandAPI";
 
-jest.mock("../../../../main/BP/core/api_wrapper/minecraft/CustomCommandAPI", () => {
+jest.mock("../../../../main/BP/core/api_wrapper/minecraft/custom_command/CustomCommandAPI", () => {
     const registerCommand = jest.fn();
     const getPermission = jest.fn().mockReturnValue("admin");
     const getParameterType = jest.fn((type: any) => type);

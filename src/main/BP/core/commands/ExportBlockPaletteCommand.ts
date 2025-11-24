@@ -1,5 +1,5 @@
 import { BlockPaletteExporter } from "../api_wrapper/minecraft/block_palette/BlockPaletteExporter";
-import { CustomCommandAPI } from "../api_wrapper/minecraft/CustomCommandAPI";
+import { CustomCommandAPI } from "../api_wrapper/minecraft/custom_command/CustomCommandAPI";
 
 type Vector3 = { x: number; y: number; z: number };
 
