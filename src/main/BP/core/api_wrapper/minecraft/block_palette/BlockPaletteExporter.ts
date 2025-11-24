@@ -1,29 +1,11 @@
 import { BlockTypes, world } from "@minecraft/server";
-import { calculatePaletteBounds, normalizeVector3, paletteCoordinates, resolvePaletteConfig } from "./PaletteLayout";
-import type { BoundingBox, Vector3 } from "./PaletteLayout";
-
-export type ExportedBlock = {
-    typeId: string;
-    properties: { name: string; value: boolean | number | string }[];
-    location: Vector3;
-};
-
-export type ExportOptions = {
-    dimensionId: string;
-    origin?: Vector3;
-    spacing?: number;
-    gridWidth?: number;
-    layerHeight?: number;
-    maxBlocks?: number;
-};
-
-export type ExportResult =
-    | { success: true; blocks: ExportedBlock[]; bounds: BoundingBox }
-    | { success: false; error: string };
+import { PaletteLayout } from "./PaletteLayout";
+import type { ExportOptions, ExportResult, ExportedBlock } from "./block_palette_exporter.types";
+import type { BoundingBox } from "./palette_layout.types";
 
 export class BlockPaletteExporter {
-    static export(options: ExportOptions): ExportResult {
-        const origin = normalizeVector3(options.origin);
+    public static export(options: ExportOptions): ExportResult {
+        const origin = PaletteLayout.normalizeVector3(options.origin);
 
         if (!origin) {
             return { success: false, error: "Missing origin" };
@@ -42,11 +24,11 @@ export class BlockPaletteExporter {
         }
 
         const blockTypes = BlockTypes.getAll();
-        const config = resolvePaletteConfig(options, blockTypes.length);
-        const bounds = calculatePaletteBounds(origin, config);
+        const config = PaletteLayout.resolvePaletteConfig(options, blockTypes.length);
+        const bounds = PaletteLayout.calculatePaletteBounds(origin, config);
         const blocks: ExportedBlock[] = [];
 
-        for (const { location } of paletteCoordinates(origin, config)) {
+        for (const { location } of PaletteLayout.paletteCoordinates(origin, config)) {
             let block;
 
             try {
@@ -85,7 +67,7 @@ export class BlockPaletteExporter {
         return { success: true, blocks, bounds };
     }
 
-    static transmit(blocks: ExportedBlock[], metadata: { dimensionId: string; bounds: BoundingBox }) {
+    public static transmit(blocks: ExportedBlock[], metadata: { dimensionId: string; bounds: BoundingBox }) {
         const payload = {
             type: "blockPaletteExport",
             dimensionId: metadata.dimensionId,
@@ -97,7 +79,9 @@ export class BlockPaletteExporter {
         console.warn(`[BlockPaletteExport] ${serialized}`);
 
         try {
-            world.sendMessage(`Exported ${blocks.length} blocks from ${metadata.dimensionId}. Payload size: ${serialized.length}`);
+            world.sendMessage(
+                `Exported ${blocks.length} blocks from ${metadata.dimensionId}. Payload size: ${serialized.length}`
+            );
         } catch (error) {
             console.warn(`[BlockPaletteExport] Failed to broadcast message: ${error}`);
         }
