@@ -3,59 +3,64 @@
 ## 🎯 Goal
 Hỗ trợ triển khai task cho dự án **CubeGuard** theo đúng workflow chuẩn, đảm bảo:
 
-1. **Không module nào chứa file `index.ts`.**
+1. **Không module nào chứa file `index.ts`.**  
+   → Minecraft Bedrock không hỗ trợ barrel-file, không resolve index → PHẢI cấm hoàn toàn.
 2. **Tất cả API từ lib ngoài phải thông qua wrapper:**
    ```
    src/main/BP/core/api_wrapper/
    ```
 3. **Agent chỉ được phép sửa code trong các khu vực cho phép:**
    - `src/**`  *(toàn quyền sửa khi cần)*
-   - `.github/**` *(được sửa nhẹ)* trừ khi có yêu cầu thay đổi trực tiếp từ người dùng, nếu muốn thay đổi nhiều phải xin phép người dùng
-   - `scripts/**` *(được sửa nhẹ)* trừ khi có yêu cầu thay đổi trực tiếp từ người dùng, nếu muốn thay đổi nhiều phải xin phép người dùng
+   - `.github/**` *(sửa nhẹ, phải hỏi user nếu sửa lớn)*
+   - `scripts/**` *(sửa nhẹ, phải hỏi user nếu sửa lớn)*
 4. **Agent tuyệt đối không được sửa hoặc ghi file trong thư mục pack:**
    - `BP/`, `RP/`, `SP/`, `WT/`
 5. Trước khi chạy `npm run build` hoặc `npm test`, agent phải:
-   - kiểm tra **dependencies** có đầy đủ hay không
-   - chạy `npm install` hoặc `npm ci` nếu cần (sau khi hỏi người dùng)
+   - kiểm tra **dependencies** đầy đủ
+   - chạy `npm install` hoặc `npm ci` nếu cần (phải hỏi user)
 6. Sau khi chỉnh code xong, agent phải:
    - chạy `npm run build`
    - chạy `npm test`
    - xuất summary rõ ràng
-7. **Mọi phản hồi với người dùng bắt buộc dùng tiếng Việt.**
-8. **Tích hợp Strict Module Design v4 khi sinh code module mới**, với phiên bản mẫu TypeScript chuẩn hóa bên dưới.
+7. **Mọi phản hồi phải dùng tiếng Việt.**
+8. **Strict Module Design v5 (Class-based, No index.ts) áp dụng khi tạo module mới hoặc khi user yêu cầu refactor module theo chuẩn.**
+9. **Wrapper modules có quy tắc riêng (Strict Wrapper Design).**
+
 ---
 
 ## 🧠 Capabilities Required
-- Quét cấu trúc file & detect rule violations  
+- Quét cấu trúc file  
+- Phát hiện rule violation  
 - Giới hạn vùng ghi file  
 - Xoá file hợp lệ  
-- Phân tích import (wrapper rule)  
+- Phân tích import (Wrapper Rule)  
 - Chạy shell (`npm install`, `npm ci`, `npm run build`, `npm test`)  
-- Sinh summary chi tiết  
+- Sinh code đúng template v5  
+- Sinh summary tiếng Việt  
 
 ---
 
-## 📌 Rules
+# 📌 RULES
 
-### **Rule 1 — Không được tồn tại file `index.ts` trong bất kỳ module nào**
+---
+
+## **Rule 1 — Cấm tuyệt đối mọi file `index.ts`**
 - Quét: `src/**/index.ts`
-- Nếu phát hiện:
+- Nếu tồn tại:
   - cảnh báo
-  - hỏi người dùng có muốn xoá không
+  - hỏi user có muốn xoá không
   - nếu Yes → xoá
-  - nếu No → đánh dấu lỗi cuối workflow
+  - nếu No → report trong summary
 
 ---
 
-### **Rule 2 — Allowed Modification Zones**
-Agent chỉ được phép sửa code trong các khu vực sau:
-
-#### ✔ **Toàn quyền sửa**
+## **Rule 2 — Allowed Modification Zones**
+### ✔ Toàn quyền sửa
 ```
 src/**
 ```
 
-#### ✔ **Sửa nhẹ / hạn chế thay đổi lớn**
+### ✔ Sửa nhẹ / hạn chế
 ```
 .github/**
 scripts/**
@@ -82,18 +87,25 @@ Nếu agent cố sửa:
 
 ---
 
-### **Rule 3 — Tất cả API từ lib ngoài phải đi qua wrapper**
-- Quét tất cả file `.ts` trong `src/**`
-- File wrapper hợp lệ nằm tại:
-  ```
-  src/main/BP/core/api_wrapper/minecraft/
-  ```
-- Các import bị xem là *vi phạm* nếu:
-  - import trực tiếp từ `"@minecraft/*"`
-  - import từ lib npm
-  - import từ thư viện third-party (không bắt đầu bằng ./ hoặc ../)
-- Nếu file *không phải* wrapper → báo lỗi  
-- Nếu người dùng chọn “fix imports” → agent chỉnh sửa **chỉ trong `src/**`**
+## **Rule 3 — Wrapper Import Rule**
+Chỉ được phép import API Minecraft từ wrapper:
+
+```
+src/main/BP/core/api_wrapper/minecraft/**
+```
+
+Vi phạm nếu:
+- `import "@minecraft/*"`
+- import trực tiếp từ thư viện npm  
+- import không bắt đầu bằng "./" hoặc "../" (ngoại trừ file wrapper chính)
+
+Nếu vi phạm → agent phải báo:
+
+```
+⚠ Import API từ lib ngoài phải qua wrapper.
+```
+
+Nếu user yêu cầu “fix imports” → agent tự sửa.
 
 ---
 
@@ -164,166 +176,132 @@ Báo cáo cuối cùng phải bao gồm:
 - cảnh báo nếu user từ chối cài dependencies  
 - cảnh báo nếu user yêu cầu sửa file ngoài allowed zones
 
-# 🚀 **Rule 8 — Strict Module Design v4 (TypeScript Version)**  
+---
 
-Khi user yêu cầu **tạo module mới**, agent **bắt buộc** sinh code theo chuẩn:
+# 🚀 RULE 8 — **Strict Module Design v5 (Class-based, No index.ts)**  
+Áp dụng khi:
+
+- user yêu cầu **tạo module mới**  
+- user yêu cầu **refactor module theo strict design**  
+- agent tự tạo file mới trong `src/**`
 
 ---
 
-## ✔ Yêu cầu chung
-- Public API: chỉ dùng `export function`, rõ ràng, sạch.  
-- Internal API: dùng `private` *hoặc* hàm internal không export.  
-- Không expose dư thừa.  
-- Tất cả hàm chỉ nhận **primitive parameters**.  
-- Không dùng object phức tạp, không shared state.  
-- Mỗi logic chia nhỏ thành nhiều hàm nhỏ để test độc lập.  
-- Module phải test được ngay.  
+# 🎯 Strict Module Design v5 — Specification
 
----
+## ✔ 1. Mỗi module = **một folder riêng**
 
-## ✔ STRICT CODE TEMPLATE (TypeScript — FINAL)
+Ví dụ:
+```
+custom_command/
+    CustomCommandAPI.ts
+    custom_command.types.ts
+    custom_command.interfaces.ts
+```
+
+## ✔ 2. KHÔNG BAO GIỜ tạo file `index.ts`
+Minecraft Bedrock không support → cấm tuyệt đối.
+
+## ✔ 3. File chính của module = **1 class duy nhất**
+- Public API = **static methods**
+- Internal = **private static methods**
+- Không tạo instance  
+- Không chứa shared state  
+- Không export function rời rạc  
+
+## ✔ 4. Phân tách type và interface
+- `<module>.types.ts`
+- `<module>.interfaces.ts`
+
+## ✔ 5. Tên file chuẩn hóa
+- class file: PascalCase  
+- type/interface file: snake case hoặc kebab case theo module name
+
+## ✔ 6. Template CHUẨN
+
+### 🔶 **FILE: ModuleName.ts**
 
 ```ts
 // ============================================================================
-// 📌 Module Name: SampleModule
-// 🎯 Purpose    : Demo chuẩn module TypeScript
-// 🧩 Description: Mẫu chuẩn hóa structure & style Strict Module Design v4
-// 🔗 Dependencies: (none)
-//
-// 🏷 Public APIs:
-//   - add(a: number, b: number) → number
-//
-// 🔒 Internal Logic (dùng primitive parameters & private methods):
-//   - validateNumber(n: number)
-//
-// 🧪 Testability:
-//   - Test file: SampleModule.test.ts
-//   - Test tất cả Public API theo Arrange → Act → Assert
-//
-// ✍️ Author  : AI-Generated Using Standard Prompt
-// 📅 Created : 2025-10-25
-// ♻️ Updated : 2025-10-25
+// 📌 Module Name: <ModuleName>
+// 🎯 Purpose    : <Mục đích module>
+// 🧩 Description: <Giải thích behavior>
+// 🔒 Design     : Class-based Static API (CubeGuard)
 // ============================================================================
 
+export class <ModuleName> {
+    // ================= PUBLIC STATIC =================
 
-// ====================== PUBLIC API IMPLEMENTATION ==========================
+    public static doSomething(input: number): number {
+        this.validateNumber(input);
+        return input * 2;
+    }
 
-export function add(a: number, b: number): number {
-    validateNumber(a);
-    validateNumber(b);
-    return a + b;
-}
+    // ================= PRIVATE STATIC ================
 
-
-// ====================== INTERNAL IMPLEMENTATION ===========================
-
-// Internal hàm bắt buộc dùng private để đảm bảo đóng gói module.
-// Trong TS module (không class), private = không export.
-// (Agent tuyệt đối không export internal API)
-function validateNumber(n: number): void {
-    if (typeof n !== "number") {
-        throw new Error("Input must be a number");
+    private static validateNumber(n: number): void {
+        if (typeof n !== "number") {
+            throw new Error("Input must be a number");
+        }
     }
 }
-
-
-// ====================== EXPORT MODULES ====================================
-
-export default { add };
 ```
 
 ---
 
-## ✔ STRICT TEST TEMPLATE (TypeScript — FINAL)
+### 🔶 **FILE: module.types.ts**
 
 ```ts
-// Test Name: SampleModule.test.ts
-import { add } from "./SampleModule";
-
-test("add should return correct sum", () => {
-    // Arrange
-    const a = 2;
-    const b = 3;
-
-    // Act
-    const result = add(a, b);
-
-    // Assert
-    expect(result).toBe(5);
-});
+export type <TypeName> = {
+    id: number;
+    name: string;
+};
 ```
 
 ---
 
-## 🛠 Workflow (Full)
+### 🔶 **FILE: module.interfaces.ts**
 
-### **Step 1 — Scan forbidden index.ts**
-- Quét `src/**/index.ts`
-- Hiển thị danh sách
-- Hỏi user có muốn xoá không
-
----
-
-### **Step 2 — Enforce “src only” modification rule**
-Agent:
-- Chỉ được ghi/sửa xoá file trong `src/**`
-- Khi phát hiện lệnh ghi vào BP/RP:
-  ```
-  ⚠ Blocked: attempting to modify file outside src/**
-  ```
-- Hỏi lại user để xác nhận nếu thật sự cần
-
----
-
-### **Step 3 — Check wrapper imports**
-- Quét import từ:
-  - `@minecraft/server`
-  - `@minecraft/server-ui`
-  - `@minecraft/*`
-  - npm libs
-- Nếu import nằm ngoài wrapper → vi phạm rule
-
-Nếu user bật autofix:
-- Agent refactor import → chuyển về wrapper tương ứng  
-  (chỉ áp dụng trong `src/**`)
-
----
-
-### **Step 4A — Dependency Check**
-- Kiểm tra node_modules
-- Kiểm tra dependency missing
-- Kiểm tra peer dependency conflict
-- Kiểm tra lockfile
-- Hỏi user trước khi chạy `npm install` or `npm ci`
-
----
-
-### **Step 5 — Build**
-```
-npm run build
+```ts
+export interface <InterfaceName> {
+    id: number;
+    name: string;
+}
 ```
 
 ---
 
-### **Step 6 — Test**
-```
-npm test --silent
-```
+# 🚀 RULE 9 — Strict Wrapper Design (áp dụng cho folder `core/api_wrapper/minecraft/**`)
+
+Wrapper phải theo chuẩn:
+
+### ✔ 1. Một wrapper = một class  
+### ✔ 2. Public API = static  
+### ✔ 3. Internal logic = private static  
+### ✔ 4. Không tách internal function ra ngoài class  
+### ✔ 5. Không export default object  
+### ✔ 6. Không dùng functional-template của Strict Module v4  
+### ✔ 7. Bắt buộc dùng TS class OOP  
+### ✔ 8. Được phép giữ behavior cũ của Minecraft API
+
+Nếu refactor wrapper → agent **phải** tạo module theo chuẩn v5 như ví dụ:
+
+- `CustomCommandAPI.ts`
+- `custom_command.types.ts`
+- `custom_command.interfaces.ts`
 
 ---
 
-### **Step 7 — Final Summary**
-Ví dụ:
+# 🛠 Workflow
 
-```
-✔ Không có index.ts vi phạm
-✔ Tất cả import đã tuân thủ wrapper
-✔ Một số thay đổi nhỏ trong .github/workflows/build.yml
-✔ Dependencies OK
-✔ Build thành công
-✔ Test thành công
-✨ Task hoàn tất!
-```
+### Step 0 — Strict v5 Template (nếu tạo module mới)
+### Step 1 — Scan forbidden index.ts
+### Step 2 — Allowed zones check
+### Step 3 — Wrapper import validation
+### Step 4A — Dependency check
+### Step 5 — Build
+### Step 6 — Test
+### Step 7 — Summary
 
 ---
 
