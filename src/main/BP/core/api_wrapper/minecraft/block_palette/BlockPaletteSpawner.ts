@@ -11,17 +11,23 @@ export class BlockPaletteSpawner {
 
         const dimension = world.getDimension(options.dimensionId);
         const blockTypes = BlockTypes.getAll();
+        const filteredBlockTypes = this.filterBlockTypes(blockTypes, options);
+        const filtered = blockTypes.length - filteredBlockTypes.length;
         const config = PaletteLayout.resolvePaletteConfig(
             { spacing, gridWidth, layerHeight, maxBlocks: options.maxBlocks },
-            blockTypes.length
+            filteredBlockTypes.length
         );
         const bounds = PaletteLayout.calculatePaletteBounds(origin, config);
 
         let placed = 0;
         let failed = 0;
+        let attempted = 0;
 
         for (const { location, index } of PaletteLayout.paletteCoordinates(origin, config)) {
-            const blockType = blockTypes[index];
+            const blockType = filteredBlockTypes[index];
+            if (!blockType) {
+                continue;
+            }
 
             try {
                 const block = dimension.getBlock(location);
@@ -31,12 +37,37 @@ export class BlockPaletteSpawner {
                 } else {
                     failed++;
                 }
+                attempted++;
             } catch (error) {
                 console.error("[SpawnBlocks] Error while setting block:", error);
                 failed++;
+                attempted++;
             }
         }
 
-        return { placed, failed, attempted: config.maxBlocks, bounds };
+        return { placed, failed, attempted, filtered, bounds };
+    }
+
+    private static filterBlockTypes(blockTypes: any[], options: SpawnOptions): any[] {
+        const excludeIds = new Set(options.excludeIds ?? []);
+        const predicate = options.filter;
+
+        return blockTypes.filter((blockType) => {
+            const blockId = this.getBlockId(blockType);
+
+            if (excludeIds.size > 0 && excludeIds.has(blockId)) {
+                return false;
+            }
+
+            if (predicate) {
+                return predicate(blockId);
+            }
+
+            return true;
+        });
+    }
+
+    private static getBlockId(blockType: { id?: string; typeId?: string }): string {
+        return blockType?.id ?? blockType?.typeId ?? "";
     }
 }

@@ -7,6 +7,14 @@ export type SpawnOptions = {
     gridWidth?: number;
     layerHeight?: number;
     maxBlocks?: number;
+    filter?: (blockId: string) => boolean;
+    excludeIds?: string[];
 };
 
-export type SpawnResult = { placed: number; failed: number; attempted: number; bounds: BoundingBox };
+export type SpawnResult = {
+    placed: number;
+    failed: number;
+    attempted: number;
+    filtered: number;
+    bounds: BoundingBox;
+};
