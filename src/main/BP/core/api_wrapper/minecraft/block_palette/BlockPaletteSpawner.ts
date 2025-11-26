@@ -50,6 +50,7 @@ export class BlockPaletteSpawner {
 
     private static filterBlockTypes(blockTypes: any[], options: SpawnOptions): any[] {
         const excludeIds = new Set(options.excludeIds ?? []);
+        const excludePatterns = options.excludePatterns ?? [];
         const predicate = options.filter;
 
         return blockTypes.filter((blockType) => {
@@ -59,11 +60,25 @@ export class BlockPaletteSpawner {
                 return false;
             }
 
+            if (excludePatterns.length > 0 && this.isExcludedByPattern(blockId, excludePatterns)) {
+                return false;
+            }
+
             if (predicate) {
                 return predicate(blockId);
             }
 
             return true;
+        });
+    }
+
+    private static isExcludedByPattern(blockId: string, patterns: Array<string | RegExp>): boolean {
+        return patterns.some((pattern) => {
+            if (pattern instanceof RegExp) {
+                return pattern.test(blockId);
+            }
+
+            return blockId.startsWith(pattern);
         });
     }
 

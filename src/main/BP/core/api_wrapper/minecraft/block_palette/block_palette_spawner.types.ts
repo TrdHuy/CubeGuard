@@ -9,6 +9,7 @@ export type SpawnOptions = {
     maxBlocks?: number;
     filter?: (blockId: string) => boolean;
     excludeIds?: string[];
+    excludePatterns?: (string | RegExp)[];
 };
 
 export type SpawnResult = {

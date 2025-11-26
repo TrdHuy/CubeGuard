@@ -134,4 +134,37 @@ describe("BlockPaletteSpawner", () => {
         });
         expect(placedBlockIds).toEqual(["block-0", "block-2"]);
     });
+
+    it("excludes blocks by pattern prefix", () => {
+        const placedBlockIds: string[] = [];
+        const mockDimension = {
+            getBlock: jest.fn(() => ({
+                setType: jest.fn((block: any) => placedBlockIds.push(block.id)),
+            })),
+        };
+
+        const { getDimension, getAllBlocks } = (globalThis as any).__mcServer;
+        getDimension.mockReturnValue(mockDimension);
+        getAllBlocks.mockReturnValue([
+            { id: "element_1" },
+            { id: "element_2" },
+            { id: "elemental_block" },
+            { id: "stone" },
+            { id: "dirt" },
+        ]);
+
+        const result = BlockPaletteSpawner.spawn({
+            dimensionId: "overworld",
+            excludePatterns: ["element"],
+        });
+
+        expect(result).toEqual({
+            placed: 2,
+            failed: 0,
+            attempted: 2,
+            filtered: 3,
+            bounds: { min: { x: 0, y: 0, z: 0 }, max: { x: 3, y: 0, z: 0 } },
+        });
+        expect(placedBlockIds).toEqual(["stone", "dirt"]);
+    });
 });
