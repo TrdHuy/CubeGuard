@@ -2,6 +2,32 @@ import { BlockTypes, world } from "@minecraft/server";
 import { PaletteLayout } from "./PaletteLayout";
 import type { SpawnOptions, SpawnResult } from "./block_palette_spawner.types";
 
+/**
+ * Bộ sinh block palette dùng để đặt toàn bộ block có sẵn trong game theo lưới.
+ *
+ * Tham số SpawnOptions chính:
+ * - dimensionId (bắt buộc): dimension cần spawn (ví dụ: overworld, nether, the_end).
+ * - maxBlocks, spacing, gridWidth, layerHeight, origin: kiểm soát giới hạn, khoảng cách, kích thước lưới và tọa độ gốc.
+ * - Bộ lọc loại trừ: excludeIds (Set/mảng id cụ thể) → excludePatterns (prefix string hoặc RegExp) → filter (predicate cuối cùng).
+ *   Thứ tự áp dụng: excludeIds → excludePatterns → filter.
+ *
+ * Ví dụ command (creator:spawnblockpalette):
+ * - Loại trừ nhiều ID cụ thể (CSV): `/creator:spawnblockpalette overworld 500 2 20 3 ~~~ id1,id2,id3`
+ * - Truyền JSON cho danh sách excludeIds: `/creator:spawnblockpalette overworld 300 2 15 3 ~~~ ["dirt","stone"]`
+ * - Loại trừ theo prefix và regex cho excludePatterns: `/creator:spawnblockpalette overworld 500 2 20 3 ~~~ "" ["element","/candle/"]`
+ *   (regex phải viết dạng `/pattern/` khi nhập lệnh).
+ *
+ * Ví dụ gọi API trực tiếp:
+ * ```ts
+ * await BlockPaletteSpawner.spawn({
+ *     dimensionId: "overworld",
+ *     excludeIds: ["element_core"],
+ *     excludePatterns: ["element", /candle/],
+ * });
+ * ```
+ *
+ * Kết quả trả về (SpawnResult): placed, failed, attempted, filtered và bounds (giới hạn khu vực spawn).
+ */
 export class BlockPaletteSpawner {
     public static spawn(options: SpawnOptions): SpawnResult {
         const spacing = options.spacing ?? undefined;
