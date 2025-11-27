@@ -21,8 +21,11 @@ export class PaletteLayout {
         const spacing = options.spacing ?? this.DEFAULT_SPACING;
         const gridWidth = Math.max(1, Math.floor(options.gridWidth ?? this.DEFAULT_GRID_WIDTH));
         const layerHeight = Math.max(1, Math.floor(options.layerHeight ?? this.DEFAULT_LAYER_HEIGHT));
-        const requestedMax = options.maxBlocks && options.maxBlocks > 0 ? Math.floor(options.maxBlocks) : availableBlocks;
-        const maxBlocks = Math.min(Math.max(1, requestedMax), availableBlocks);
+        const availableCount = Math.max(0, Math.floor(availableBlocks));
+        const requestedMax =
+            options.maxBlocks && options.maxBlocks > 0 ? Math.floor(options.maxBlocks) : availableCount;
+        const cappedRequested = availableCount === 0 ? 0 : Math.max(1, requestedMax);
+        const maxBlocks = Math.min(cappedRequested, availableCount);
 
         return { spacing, gridWidth, layerHeight, maxBlocks };
     }

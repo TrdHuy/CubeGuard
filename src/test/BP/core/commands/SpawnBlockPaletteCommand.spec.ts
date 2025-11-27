@@ -60,6 +60,8 @@ describe("SpawnBlockPaletteCommand", () => {
             spacing: undefined,
             gridWidth: undefined,
             layerHeight: undefined,
+            excludeIds: undefined,
+            excludePatterns: undefined,
         });
         expect(response).toEqual({ message: "Starting block palette generation...", status: 0 });
     });
@@ -81,6 +83,8 @@ describe("SpawnBlockPaletteCommand", () => {
             spacing: undefined,
             gridWidth: undefined,
             layerHeight: undefined,
+            excludeIds: undefined,
+            excludePatterns: undefined,
         });
 
         commandHandler?.(ctx, "overworld", 12);
@@ -92,6 +96,8 @@ describe("SpawnBlockPaletteCommand", () => {
             spacing: undefined,
             gridWidth: undefined,
             layerHeight: undefined,
+            excludeIds: undefined,
+            excludePatterns: undefined,
         });
     });
 
@@ -116,6 +122,35 @@ describe("SpawnBlockPaletteCommand", () => {
             spacing: 2,
             gridWidth: 2,
             layerHeight: 3,
+            excludeIds: undefined,
+            excludePatterns: undefined,
+        });
+    });
+
+    it("parses exclude ids and patterns from arguments", async () => {
+        const spawnSpy = jest.spyOn(BlockPaletteSpawner, "spawn").mockReturnValue({
+            placed: 4,
+            failed: 0,
+            attempted: 4,
+            bounds: { min: { x: 0, y: 0, z: 0 }, max: { x: 0, y: 0, z: 0 } },
+        });
+        SpawnBlockPaletteCommand.register();
+
+        const ctx = { sourceEntity: { location: { x: 2, y: 2, z: 2 }, dimension: { id: "overworld" } } };
+
+        commandHandler?.(ctx, "overworld", undefined, undefined, undefined, undefined, undefined, "stone, dirt ",
+            "element,/candle/");
+
+        await Promise.resolve();
+        expect(spawnSpy).toHaveBeenCalledWith({
+            dimensionId: "overworld",
+            origin: { x: 2, y: 2, z: 2 },
+            maxBlocks: undefined,
+            spacing: undefined,
+            gridWidth: undefined,
+            layerHeight: undefined,
+            excludeIds: ["stone", "dirt"],
+            excludePatterns: ["element", /candle/],
         });
     });
 });

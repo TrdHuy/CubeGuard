@@ -50,6 +50,7 @@ describe("BlockPaletteSpawner", () => {
             placed: 10,
             failed: 0,
             attempted: 10,
+            filtered: 0,
             bounds: { min: { x: 0, y: 10, z: 0 }, max: { x: 4, y: 15, z: 4 } },
         });
 
@@ -101,7 +102,69 @@ describe("BlockPaletteSpawner", () => {
             placed: 2,
             failed: 2,
             attempted: 4,
+            filtered: 0,
             bounds: { min: { x: 0, y: 0, z: 0 }, max: { x: 2, y: 0, z: 2 } },
         });
+    });
+
+    it("excludes blocks using filter options and reports statistics", () => {
+        const placedBlockIds: string[] = [];
+        const mockDimension = {
+            getBlock: jest.fn(() => ({
+                setType: jest.fn((block: any) => placedBlockIds.push(block.id)),
+            })),
+        };
+
+        const { getDimension, getAllBlocks } = (globalThis as any).__mcServer;
+        getDimension.mockReturnValue(mockDimension);
+        getAllBlocks.mockReturnValue(new Array(5).fill(null).map((_, i) => ({ id: `block-${i}` })));
+
+        const result = BlockPaletteSpawner.spawn({
+            dimensionId: "overworld",
+            excludeIds: ["block-1", "block-3"],
+            filter: (blockId) => !blockId.endsWith("4"),
+        });
+
+        expect(result).toEqual({
+            placed: 2,
+            failed: 0,
+            attempted: 2,
+            filtered: 3,
+            bounds: { min: { x: 0, y: 0, z: 0 }, max: { x: 3, y: 0, z: 0 } },
+        });
+        expect(placedBlockIds).toEqual(["block-0", "block-2"]);
+    });
+
+    it("excludes blocks by pattern prefix", () => {
+        const placedBlockIds: string[] = [];
+        const mockDimension = {
+            getBlock: jest.fn(() => ({
+                setType: jest.fn((block: any) => placedBlockIds.push(block.id)),
+            })),
+        };
+
+        const { getDimension, getAllBlocks } = (globalThis as any).__mcServer;
+        getDimension.mockReturnValue(mockDimension);
+        getAllBlocks.mockReturnValue([
+            { id: "element_1" },
+            { id: "element_2" },
+            { id: "elemental_block" },
+            { id: "stone" },
+            { id: "dirt" },
+        ]);
+
+        const result = BlockPaletteSpawner.spawn({
+            dimensionId: "overworld",
+            excludePatterns: ["element"],
+        });
+
+        expect(result).toEqual({
+            placed: 2,
+            failed: 0,
+            attempted: 2,
+            filtered: 3,
+            bounds: { min: { x: 0, y: 0, z: 0 }, max: { x: 3, y: 0, z: 0 } },
+        });
+        expect(placedBlockIds).toEqual(["stone", "dirt"]);
     });
 });
