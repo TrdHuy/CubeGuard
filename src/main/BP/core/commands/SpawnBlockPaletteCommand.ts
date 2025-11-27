@@ -43,6 +43,10 @@ export class SpawnBlockPaletteCommand {
                 const parsedExcludeIds = SpawnBlockPaletteCommand.parseStringList(excludeIdsArg);
                 const parsedExcludePatterns = SpawnBlockPaletteCommand.parsePatternList(excludePatternsArg);
 
+                console.warn(
+                    `[SpawnBlockPalette] Command args => sender=${"name" in sender ? (sender as any).name ?? sender.type : sender.type}, dimension=${dimensionId}, origin=${JSON.stringify(origin)}, maxBlocks(raw/parsed)=${maxBlocksArg}/${parsedMaxBlocks}, spacing=${spacingArg}, gridWidth=${gridWidthArg}, layerHeight=${layerHeightArg}, excludeIds(raw/parsed)=${excludeIdsArg}/${JSON.stringify(parsedExcludeIds)}, excludePatterns(raw/parsed)=${excludePatternsArg}/${JSON.stringify(parsedExcludePatterns)}`
+                );
+
                 SystemUtils.nextTick().then(() => {
                     const result = BlockPaletteSpawner.spawn({
                         dimensionId,
